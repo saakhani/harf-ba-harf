@@ -1,7 +1,12 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:harf_ba_harf/screens/home.dart';
+import 'package:harf_ba_harf/utilities/google_signin.dart';
 
 class SignUpPage extends StatelessWidget {
-  const SignUpPage({super.key});
+  final GoogleAuthService _authService = GoogleAuthService();
+
+  SignUpPage({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -14,13 +19,10 @@ class SignUpPage extends StatelessWidget {
             const SizedBox(height: 60),
             const Text(
               "Let's Get Started!",
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 30),
-            
+
             // Name Field
             TextField(
               decoration: InputDecoration(
@@ -31,7 +33,7 @@ class SignUpPage extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 20),
-            
+
             // Email Field
             TextField(
               decoration: InputDecoration(
@@ -42,7 +44,7 @@ class SignUpPage extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 20),
-            
+
             // Password Field
             TextField(
               obscureText: true,
@@ -54,11 +56,11 @@ class SignUpPage extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 30),
-            
+
             // Divider
             const Divider(thickness: 1),
             const SizedBox(height: 20),
-            
+
             // Sign Up Button
             SizedBox(
               width: double.infinity,
@@ -74,7 +76,7 @@ class SignUpPage extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 30),
-            
+
             // Or sign up with
             const Center(
               child: Text(
@@ -83,16 +85,24 @@ class SignUpPage extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 20),
-            
+
             // Zoom Button
             Center(
-              child: TextButton(
-                onPressed: () {},
-                child: const Text('zoom', style: TextStyle(fontSize: 16)),
+              child: ElevatedButton(
+                onPressed: () async {
+                  User? user = await _authService.signInWithGoogle();
+                  if (user != null) {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => HomePage(user: user,)),
+                    );
+                  }
+                },
+                child: Text("Sign in with Google")
               ),
             ),
             const SizedBox(height: 20),
-            
+
             // Already have account
             Center(
               child: TextButton(

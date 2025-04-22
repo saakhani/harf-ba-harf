@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:harf_ba_harf/screens/home.dart';
 import 'package:harf_ba_harf/screens/login.dart';
 import 'package:harf_ba_harf/screens/signup.dart';
+import 'package:harf_ba_harf/screens/splash.dart';
 
 void main() {
   runApp(const MyApp());
@@ -17,10 +17,10 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: const HomePage(), // Set HomePage as the initial route
+      home: SplashScreen(), // Set HomePage as the initial route
       routes: {
         '/login': (context) => const LoginPage(),
-        '/signup': (context) => const SignUpPage(),
+        '/signup': (context) => SignUpPage(),
       },
     );
   }

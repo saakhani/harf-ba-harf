@@ -1,39 +1,63 @@
-import 'package:flutter/material.dart';
-import 'package:harf_ba_harf/screens/login.dart';
+import 'package:firebase_auth/firebase_auth.dart'; 
+import 'package:flutter/material.dart'; 
+import 'package:harf_ba_harf/utilities/google_signin.dart'; 
 
+// Define a stateless widget for the HomeScreen
 class HomePage extends StatelessWidget {
-  const HomePage({super.key});
+    
+  // Firebase User object to hold user details
+  final User user; 
+  HomePage(
+      {super.key,
+      
+      // Constructor to initialize the user object
+      required this.user}); 
+
+  // Instance of GoogleAuthService for authentication
+  final GoogleAuthService _authService = GoogleAuthService(); 
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Home'),
+        title: Text(
+            
+            // Display user's name in the app bar
+            "Welcome ${user.displayName}"), 
       ),
       body: Center(
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisAlignment:MainAxisAlignment.center, 
+          crossAxisAlignment:CrossAxisAlignment.center,
           children: [
-            const Text(
-              'Welcome to the Home Page!',
-              style: TextStyle(fontSize: 24),
-            ),
-            const SizedBox(height: 40),
-            ElevatedButton(
-              onPressed: () {
-                // Navigate to LoginPage
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const LoginPage()),
-                );
+            CircleAvatar(
                 
-                // Alternative using named routes:
-                // Navigator.pushNamed(context, '/login');
+              // Display user's profile picture
+              backgroundImage: NetworkImage(user.photoURL ?? ""), 
+              
+              // Set the radius of the avatar
+              radius: 40, 
+            ),
+            
+            // Display user's email
+            Text("Email: ${user.email}"),
+            
+            // Add spacing between elements
+            SizedBox(height: 20), 
+            ElevatedButton(
+              onPressed: () async {
+                
+                // Sign out from Google and Firebase
+                _authService.signOut();
+                
+                // Navigate back to the sign-in screen
+                Navigator.pop(context);
               },
               style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
+                foregroundColor: Colors.white,
+                backgroundColor: Colors.red.shade900,
               ),
-              child: const Text('Go to Login Page'),
+              child: Text("Sign Out"),
             ),
           ],
         ),
