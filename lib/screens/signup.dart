@@ -1,8 +1,5 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:harf_ba_harf/screens/home.dart';
 import 'package:harf_ba_harf/utilities/google_signin.dart';
-
 class SignUpPage extends StatelessWidget {
   final GoogleAuthService _authService = GoogleAuthService();
 
@@ -90,15 +87,16 @@ class SignUpPage extends StatelessWidget {
             Center(
               child: ElevatedButton(
                 onPressed: () async {
-                  User? user = await _authService.signInWithGoogle();
+                  final user =
+                      await _authService.signInWithGoogle(); // 1. Sign in
                   if (user != null) {
-                    Navigator.push(
+                    Navigator.pushReplacementNamed(
                       context,
-                      MaterialPageRoute(builder: (context) => HomePage(user: user,)),
-                    );
+                      '/home',
+                    ); // 2. Navigate only
                   }
                 },
-                child: Text("Sign in with Google")
+                child: Text("Sign in with Google"),
               ),
             ),
             const SizedBox(height: 20),

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:harf_ba_harf/screens/login.dart';
 
 class SplashScreen extends StatelessWidget {
   const SplashScreen({super.key});
@@ -21,14 +20,7 @@ class SplashScreen extends StatelessWidget {
             const SizedBox(height: 40),
             ElevatedButton(
               onPressed: () {
-                // Navigate to LoginPage
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const LoginPage()),
-                );
-                
-                // Alternative using named routes:
-                // Navigator.pushNamed(context, '/login');
+                Navigator.pushNamed(context, '/login');
               },
               style: ElevatedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
