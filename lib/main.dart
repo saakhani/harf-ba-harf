@@ -1,8 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:harf_ba_harf/models/meeting.dart';
+import 'package:harf_ba_harf/screens/calander.dart';
 import 'package:harf_ba_harf/screens/file_transcription.dart';
+import 'package:harf_ba_harf/screens/history.dart';
 import 'package:harf_ba_harf/screens/home.dart';
 import 'package:harf_ba_harf/screens/live_transcription.dart';
 import 'package:harf_ba_harf/screens/login.dart';
+import 'package:harf_ba_harf/screens/meeting_detail.dart';
+import 'package:harf_ba_harf/screens/profile.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:harf_ba_harf/providers/auth_provider.dart';
@@ -12,16 +17,15 @@ import 'screens/signup.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
-  
+
   runApp(
     MultiProvider(
-      providers: [
-        ChangeNotifierProvider(create: (_) => CustomAuthProvider()),
-      ],
+      providers: [ChangeNotifierProvider(create: (_) => CustomAuthProvider())],
       child: MyApp(),
     ),
   );
 }
+
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
@@ -42,8 +46,15 @@ class MyApp extends StatelessWidget {
         '/home': (context) => HomePage(),
         '/login': (context) => LoginPage(),
         '/signup': (context) => SignUpPage(),
+        '/calendar': (context) => const CalendarPage(),
+        '/history': (context) => HistoryPage(),
+        '/profile': (context) => const ProfilePage(),
         '/live-transcription': (context) => const LiveTranscriptionPage(),
         '/file-transcription': (context) => const FileTranscriptionPage(),
+        '/meeting-detail': (context) {
+          final meeting = ModalRoute.of(context)!.settings.arguments as Meeting;
+          return MeetingDetailPage(meeting: meeting);
+        },
       },
     );
   }
