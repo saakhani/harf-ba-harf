@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:harf_ba_harf/screens/signup.dart';
-import 'package:harf_ba_harf/utilities/google_signin.dart';
+import 'package:harf_ba_harf/services/google_signin.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});

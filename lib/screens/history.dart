@@ -1,7 +1,7 @@
 // lib/screens/history.dart
 import 'package:flutter/material.dart';
 import 'package:harf_ba_harf/data/dummy_data.dart';
-import 'package:harf_ba_harf/models/meeting.dart';
+import 'package:harf_ba_harf/models/meeting_model.dart';
 import 'package:harf_ba_harf/widgets/meeting_card.dart';
 import 'package:harf_ba_harf/widgets/navbar.dart';
 

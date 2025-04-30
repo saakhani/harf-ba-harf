@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:harf_ba_harf/widgets/duration_formatter.dart';
 import 'package:harf_ba_harf/widgets/transcript_entry.dart';
 import 'package:intl/intl.dart';
-import '../models/meeting.dart';
+import '../models/meeting_model.dart';
 
 class MeetingDetailPage extends StatelessWidget {
   final Meeting meeting;

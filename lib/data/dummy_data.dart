@@ -1,10 +1,13 @@
 // lib/data/dummy_data.dart
-import 'package:harf_ba_harf/models/meeting.dart';
+import 'package:harf_ba_harf/models/meeting_model.dart';
 
 class DummyData {
   static final List<Meeting> todayMeetings = [
     Meeting(
       id: '1',
+            audioUrl: "test",
+      notes: "",
+      summary: "",
       title: 'UI/UX Standup',
       date: DateTime.now().copyWith(hour: 9, minute: 0),
       duration: const Duration(hours: 1, minutes: 30),
@@ -23,6 +26,9 @@ class DummyData {
       date: DateTime.now().copyWith(hour: 12, minute: 0),
       duration: const Duration(hours: 1),
       tags: ['Softech', 'Sync'],
+      audioUrl: "test",
+      notes: "",
+      summary: "",
       transcript: [],
     ),
     Meeting(
@@ -31,6 +37,9 @@ class DummyData {
       date: DateTime.now().copyWith(hour: 15, minute: 0),
       duration: const Duration(hours: 1, minutes: 30),
       tags: ['DevOps', 'Internal'],
+            audioUrl: "test",
+      notes: "",
+      summary: "",
       transcript: [],
     ),
   ];
@@ -42,6 +51,9 @@ class DummyData {
       date: DateTime(2025, 2, 25, 9, 0),
       duration: const Duration(hours: 1, minutes: 32),
       tags: ['Design', 'Internal'],
+            audioUrl: "test",
+      notes: "",
+      summary: "",
       transcript: [
         TranscriptEntry(
           speaker: 'Maham',
@@ -57,6 +69,9 @@ class DummyData {
     ),
         Meeting(
       id: '4',
+            audioUrl: "test",
+      notes: "",
+      summary: "",
       title: 'UI/UX Stand-Up',
       date: DateTime(2025, 2, 25, 9, 0),
       duration: const Duration(hours: 1, minutes: 32),
@@ -76,6 +91,9 @@ class DummyData {
     ),
         Meeting(
       id: '4',
+            audioUrl: "test",
+      notes: "",
+      summary: "",
       title: 'UI/UX Stand-Up',
       date: DateTime(2025, 2, 25, 9, 0),
       duration: const Duration(hours: 1, minutes: 32),
@@ -95,6 +113,9 @@ class DummyData {
     ),
     Meeting(
       id: '5',
+            audioUrl: "test",
+      notes: "",
+      summary: "",
       title: 'Softech Sync',
       date: DateTime(2025, 2, 24, 16, 0),
       duration: const Duration(minutes: 47),

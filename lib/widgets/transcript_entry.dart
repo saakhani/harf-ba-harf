@@ -1,7 +1,7 @@
 // widgets/history/transcript_entry.dart
 import 'package:flutter/material.dart';
 import 'package:harf_ba_harf/widgets/duration_formatter.dart';
-import '../../models/meeting.dart';
+import '../models/meeting_model.dart';
 
 
 class TranscriptEntryWidget extends StatelessWidget {

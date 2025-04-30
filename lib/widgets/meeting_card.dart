@@ -1,6 +1,6 @@
 // widgets/history/meeting_card.dart
 import 'package:flutter/material.dart';
-import 'package:harf_ba_harf/models/meeting.dart';
+import 'package:harf_ba_harf/models/meeting_model.dart';
 import 'package:intl/intl.dart';
 
 
@@ -10,7 +10,7 @@ class MeetingCard extends StatelessWidget {
 
   const MeetingCard({
     super.key,
-    required this.meeting,
+    required this.meeting, 
     required this.onTap,
   });
 

@@ -1,5 +1,7 @@
+//main.dart
+
 import 'package:flutter/material.dart';
-import 'package:harf_ba_harf/models/meeting.dart';
+import 'package:harf_ba_harf/models/meeting_model.dart';
 import 'package:harf_ba_harf/screens/calander.dart';
 import 'package:harf_ba_harf/screens/file_transcription.dart';
 import 'package:harf_ba_harf/screens/history.dart';
@@ -17,7 +19,7 @@ import 'screens/signup.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
-
+  
   runApp(
     MultiProvider(
       providers: [ChangeNotifierProvider(create: (_) => CustomAuthProvider())],

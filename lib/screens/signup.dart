@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:harf_ba_harf/utilities/google_signin.dart';
+import 'package:harf_ba_harf/services/google_signin.dart';
 class SignUpPage extends StatelessWidget {
   final GoogleAuthService _authService = GoogleAuthService();
 

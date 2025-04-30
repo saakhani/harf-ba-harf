@@ -1,6 +1,8 @@
+//home.dart
 import 'package:flutter/material.dart';
 import 'package:harf_ba_harf/data/dummy_data.dart';
-import 'package:harf_ba_harf/models/meeting.dart';
+import 'package:harf_ba_harf/models/meeting_model.dart';
+import 'package:harf_ba_harf/services/firestore_service.dart';
 import 'package:harf_ba_harf/widgets/meeting_card.dart';
 import 'package:harf_ba_harf/widgets/navbar.dart';
 import 'package:harf_ba_harf/widgets/sidebar.dart';
@@ -11,6 +13,7 @@ class HomePage extends StatelessWidget {
   HomePage({super.key});
 
   final int _currentNavIndex = 2;
+  final FirestoreService _firestoreService = FirestoreService();
   final List<Color> upcomingColors = [
     Colors.blue.shade100,
     Colors.green.shade100,
@@ -37,22 +40,23 @@ class HomePage extends StatelessWidget {
                 Navigator.pushNamed(context, '/file-transcription');
               }
             },
-            itemBuilder: (context) => [
-              const PopupMenuItem<String>(
-                value: 'live',
-                child: ListTile(
-                  leading: Icon(Icons.mic),
-                  title: Text('Live Transcription'),
-                ),
-              ),
-              const PopupMenuItem<String>(
-                value: 'file',
-                child: ListTile(
-                  leading: Icon(Icons.upload_file),
-                  title: Text('File Transcription'),
-                ),
-              ),
-            ],
+            itemBuilder:
+                (context) => [
+                  const PopupMenuItem<String>(
+                    value: 'live',
+                    child: ListTile(
+                      leading: Icon(Icons.mic),
+                      title: Text('Live Transcription'),
+                    ),
+                  ),
+                  const PopupMenuItem<String>(
+                    value: 'file',
+                    child: ListTile(
+                      leading: Icon(Icons.upload_file),
+                      title: Text('File Transcription'),
+                    ),
+                  ),
+                ],
           ),
           const SizedBox(width: 8),
         ],
@@ -95,18 +99,46 @@ class HomePage extends StatelessWidget {
             const SizedBox(height: 16),
 
             // Upcoming Meeting Cards
-            ...DummyData.todayMeetings.asMap().entries.map((entry) {
-              final index = entry.key;
-              final meeting = entry.value;
-              return UpcomingMeetingCard(
-                title: meeting.title,
-                time: '${DateFormat('h:mm a').format(meeting.date)} - '
-                    '${DateFormat('h:mm a').format(meeting.date.add(meeting.duration))}',
-                notes: meeting.notes ?? 'No notes available',
-                color: upcomingColors[index % upcomingColors.length],
-                margin: const EdgeInsets.only(bottom: 16),
-              );
-            }),
+            FutureBuilder<List<Meeting>>(
+              future: _firestoreService.fetchUserMeetings(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                if (snapshot.hasError) {
+                  return const Center(child: Text("Error loading meetings"));
+                }
+
+                final meetings = snapshot.data ?? [];
+                final todayMeetings =
+                    meetings.where((meeting) {
+                      return meeting.date.isAfter(
+                            DateTime.now().subtract(const Duration(days: 1)),
+                          ) &&
+                          meeting.date.isBefore(
+                            DateTime.now().add(const Duration(days: 1)),
+                          );
+                    }).toList();
+
+                return ListView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: todayMeetings.length,
+                  itemBuilder: (context, index) {
+                    final meeting = todayMeetings[index];
+                    return UpcomingMeetingCard(
+                      title: meeting.title,
+                      time:
+                          '${DateFormat('h:mm a').format(meeting.date)} - '
+                          '${DateFormat('h:mm a').format(meeting.date.add(meeting.duration))}',
+                      notes: meeting.notes,
+                      color: Colors.blue.shade100,
+                      margin: const EdgeInsets.only(bottom: 16),
+                    );
+                  },
+                );
+              },
+            ),
 
             // History Section
             const SizedBox(height: 24),
@@ -125,16 +157,19 @@ class HomePage extends StatelessWidget {
             ),
 
             // Historical Meeting Cards
-            ...recentHistory.map((meeting) => Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: MeetingCard(
-                meeting: meeting,
-                onTap: () => _navigateToDetail(context, meeting),
+            ...recentHistory.map(
+              (meeting) => Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: MeetingCard(
+                  meeting: meeting,
+                  onTap: () => _navigateToDetail(context, meeting),
+                ),
               ),
-            )),
+            ),
           ],
         ),
       ),
+
       bottomNavigationBar: FloatingNavBar(
         context: context,
         currentIndex: _currentNavIndex,
@@ -143,10 +178,6 @@ class HomePage extends StatelessWidget {
   }
 
   void _navigateToDetail(BuildContext context, Meeting meeting) {
-    Navigator.pushNamed(
-      context,
-      '/meeting-detail',
-      arguments: meeting,
-    );
+    Navigator.pushNamed(context, '/meeting-detail', arguments: meeting);
   }
 }
