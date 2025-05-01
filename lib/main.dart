@@ -13,13 +13,16 @@ import 'package:harf_ba_harf/screens/profile.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:harf_ba_harf/providers/auth_provider.dart';
+import 'firebase_options.dart';
 
 import 'screens/signup.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp();
-  
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+
   runApp(
     MultiProvider(
       providers: [ChangeNotifierProvider(create: (_) => CustomAuthProvider())],

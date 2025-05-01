@@ -1,6 +1,9 @@
+import 'dart:convert';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:harf_ba_harf/models/meeting_model.dart';
+import 'package:http/http.dart' as http;
 
 class FirestoreService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -23,5 +26,57 @@ class FirestoreService {
             .get();
 
     return meetingsQuery.docs.map((doc) => Meeting.fromFirestore(doc)).toList();
+  }
+
+  Future<void> uploadAndTranscribe({
+    required String filePath,
+    required String title,
+    required List<String> tags,
+    required String backendUrl,
+  }) async {
+    // Upload file to backend and get transcription
+    final request = http.MultipartRequest(
+      'POST',
+      Uri.parse(
+        backendUrl.endsWith('/')
+            ? '${backendUrl}diarize_transcribe'
+            : '$backendUrl/diarize_transcribe',
+      ),
+    );
+    request.files.add(await http.MultipartFile.fromPath('audio', filePath));
+    final response = await request.send();
+
+    if (response.statusCode != 200) {
+      throw Exception('Failed to transcribe audio');
+    }
+
+    final responseBody = await response.stream.bytesToString();
+    final data = jsonDecode(responseBody);
+    print(data);
+
+    // Save transcription and meeting data to Firestore
+    final meetingId =
+        FirebaseFirestore.instance.collection('meetings').doc().id;
+    await FirebaseFirestore.instance.collection('meetings').doc(meetingId).set({
+      'title': title,
+      'date': DateTime.now(),
+      'duration_seconds': data['duration_seconds'],
+      'audio_url': "",
+      'tags': tags,
+      'transcript': data['transcript'],
+      'notes': '',
+      'summary': '',
+    });
+
+    // Update user's meeting IDs
+    final userId = FirebaseAuth.instance.currentUser?.uid;
+    if (userId != null) {
+      final userDoc = FirebaseFirestore.instance
+          .collection('users')
+          .doc(userId);
+      await userDoc.update({
+        'meetingIDs': FieldValue.arrayUnion([meetingId]),
+      });
+    }
   }
 }

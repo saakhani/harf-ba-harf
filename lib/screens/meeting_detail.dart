@@ -32,7 +32,6 @@ class MeetingDetailPage extends StatelessWidget {
             const Divider(height: 40),
             ...meeting.transcript
                 .map((entry) => TranscriptEntryWidget(entry: entry))
-                .toList(),
           ],
         ),
       ),

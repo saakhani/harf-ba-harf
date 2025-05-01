@@ -1,6 +1,5 @@
 // lib/screens/history.dart
 import 'package:flutter/material.dart';
-import 'package:harf_ba_harf/data/dummy_data.dart';
 import 'package:harf_ba_harf/models/meeting_model.dart';
 import 'package:harf_ba_harf/services/firestore_service.dart';
 import 'package:harf_ba_harf/widgets/meeting_card.dart';
@@ -14,8 +13,7 @@ class HistoryPage extends StatefulWidget {
 }
 
 class _HistoryPageState extends State<HistoryPage> {
-  String _currentFilter = 'By Date';
-    final FirestoreService _firestoreService = FirestoreService();
+  final FirestoreService _firestoreService = FirestoreService();
 
   @override
   Widget build(BuildContext context) {
@@ -36,7 +34,9 @@ class _HistoryPageState extends State<HistoryPage> {
                   return const Center(child: CircularProgressIndicator());
                 }
                 if (snapshot.hasError) {
+                  print('Error: ${snapshot.error}');
                   return const Center(child: Text("Error loading meetings"));
+
                 }
                 final meetings = snapshot.data ?? [];
                 final pastMeetings =
@@ -88,8 +88,4 @@ class _HistoryPageState extends State<HistoryPage> {
   //     }
   //   });
   // }
-
-  void _navigateToDetail(BuildContext context, Meeting meeting) {
-    Navigator.pushNamed(context, '/meeting-detail', arguments: meeting);
-  }
 }

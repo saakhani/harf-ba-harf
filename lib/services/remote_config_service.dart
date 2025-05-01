@@ -10,7 +10,7 @@ class RemoteConfigService {
     final remoteConfig = FirebaseRemoteConfig.instance;
     await remoteConfig.setConfigSettings(RemoteConfigSettings(
       fetchTimeout: const Duration(seconds: 10),
-      minimumFetchInterval: const Duration(hours: 1),
+      minimumFetchInterval: const Duration(seconds: 1),
     ));
     await remoteConfig.fetchAndActivate();
     return RemoteConfigService._(remoteConfig);

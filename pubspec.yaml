@@ -11,7 +11,6 @@ dependencies:
     sdk: flutter
   firebase_core: ^3.13.0
   firebase_auth: ^5.5.3
-  firebase_remote_config: ^5.4.3
   firebase_storage: ^12.4.5
   cloud_firestore: ^5.6.7
   google_sign_in: ^6.3.0
@@ -27,3 +26,7 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  fonts:
+    - family: NotoNastaliq
+      fonts:
+        - asset: assets/fonts/NotoNastaliqUrdu-Regular.ttf

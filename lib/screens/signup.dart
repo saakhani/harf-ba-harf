@@ -87,9 +87,8 @@ class SignUpPage extends StatelessWidget {
             Center(
               child: ElevatedButton(
                 onPressed: () async {
-                  final user =
-                      await _authService.signInWithGoogle(); // 1. Sign in
-                  if (user != null) {
+                  final user = await _authService.signInWithGoogle(); // 1. Sign in
+                  if (user != null && context.mounted) {
                     Navigator.pushReplacementNamed(
                       context,
                       '/home',
