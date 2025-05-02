@@ -1,8 +1,9 @@
 //main.dart
 
 import 'package:flutter/material.dart';
+import 'package:harf_ba_harf/firebase_options.dart';
 import 'package:harf_ba_harf/models/meeting_model.dart';
-import 'package:harf_ba_harf/screens/calander.dart';
+import 'package:harf_ba_harf/screens/calendar.dart';
 import 'package:harf_ba_harf/screens/file_transcription.dart';
 import 'package:harf_ba_harf/screens/history.dart';
 import 'package:harf_ba_harf/screens/home.dart';
@@ -13,7 +14,7 @@ import 'package:harf_ba_harf/screens/profile.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:harf_ba_harf/providers/auth_provider.dart';
-import 'firebase_options.dart';
+
 
 import 'screens/signup.dart';
 

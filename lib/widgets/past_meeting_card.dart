@@ -3,14 +3,13 @@ import 'package:flutter/material.dart';
 import 'package:harf_ba_harf/models/meeting_model.dart';
 import 'package:intl/intl.dart';
 
-
-class MeetingCard extends StatelessWidget {
+class PastMeetingCard extends StatelessWidget {
   final Meeting meeting;
   final VoidCallback onTap;
 
-  const MeetingCard({
+  const PastMeetingCard({
     super.key,
-    required this.meeting, 
+    required this.meeting,
     required this.onTap,
   });
 
@@ -27,9 +26,9 @@ class MeetingCard extends StatelessWidget {
             children: [
               Text(
                 meeting.title,
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 8),
               _buildDateRow(context),
@@ -63,12 +62,13 @@ class MeetingCard extends StatelessWidget {
   Widget _buildTags() {
     return Wrap(
       spacing: 8,
-      children: meeting.tags
-          .map((tag) => Chip(
-                label: Text(tag),
-                backgroundColor: Colors.grey[200],
-              ))
-          .toList(),
+      children:
+          meeting.tags
+              .map(
+                (tag) =>
+                    Chip(label: Text(tag), backgroundColor: Colors.grey[200]),
+              )
+              .toList(),
     );
   }
 }

@@ -1,9 +1,7 @@
-//home.dart
 import 'package:flutter/material.dart';
-import 'package:harf_ba_harf/data/dummy_data.dart';
 import 'package:harf_ba_harf/models/meeting_model.dart';
 import 'package:harf_ba_harf/services/firestore_service.dart';
-import 'package:harf_ba_harf/widgets/meeting_card.dart';
+import 'package:harf_ba_harf/widgets/past_meeting_card.dart';
 import 'package:harf_ba_harf/widgets/navbar.dart';
 import 'package:harf_ba_harf/widgets/sidebar.dart';
 import 'package:harf_ba_harf/widgets/upcoming_meetings_card.dart';
@@ -13,19 +11,10 @@ class HomePage extends StatelessWidget {
   HomePage({super.key});
 
   final int _currentNavIndex = 2;
-  final FirestoreService _firestoreService = FirestoreService();
-  final List<Color> upcomingColors = [
-    Colors.blue.shade100,
-    Colors.green.shade100,
-    Colors.orange.shade100,
-    Colors.purple.shade100,
-    Colors.teal.shade100,
-  ];
-
+  final List<Color> upcomingColors = UpcomingMeetingCard.colorOptions;
   @override
   Widget build(BuildContext context) {
     final currentDate = DateFormat('EEEE, d MMMM y').format(DateTime.now());
-    final recentHistory = DummyData.pastMeetings.take(2).toList();
 
     return Scaffold(
       appBar: AppBar(
@@ -99,8 +88,8 @@ class HomePage extends StatelessWidget {
             const SizedBox(height: 16),
 
             // Upcoming Meeting Cards
-            FutureBuilder<List<Meeting>>(
-              future: _firestoreService.fetchUserMeetings(),
+            StreamBuilder<List<Meeting>>(
+              stream: Meeting.getUpcomingMeetings(),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Center(child: CircularProgressIndicator());
@@ -110,29 +99,21 @@ class HomePage extends StatelessWidget {
                 }
 
                 final meetings = snapshot.data ?? [];
-                final todayMeetings =
-                    meetings.where((meeting) {
-                      return meeting.date.isAfter(
-                            DateTime.now().subtract(const Duration(days: 1)),
-                          ) &&
-                          meeting.date.isBefore(
-                            DateTime.now().add(const Duration(days: 1)),
-                          );
-                    }).toList();
-
                 return ListView.builder(
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
-                  itemCount: todayMeetings.length,
+                  itemCount: meetings.length,
                   itemBuilder: (context, index) {
-                    final meeting = todayMeetings[index];
+                    final meeting = meetings[index];
                     return UpcomingMeetingCard(
+                      meeting: meeting,
                       title: meeting.title,
                       time:
                           '${DateFormat('h:mm a').format(meeting.date)} - '
                           '${DateFormat('h:mm a').format(meeting.date.add(meeting.duration))}',
+                      duration: '${meeting.duration.inMinutes} minutes',
                       notes: meeting.notes,
-                      color: Colors.blue.shade100,
+                      color: upcomingColors[index % upcomingColors.length],
                       margin: const EdgeInsets.only(bottom: 16),
                     );
                   },
@@ -157,19 +138,34 @@ class HomePage extends StatelessWidget {
             ),
 
             // Historical Meeting Cards
-            ...recentHistory.map(
-              (meeting) => Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: MeetingCard(
-                  meeting: meeting,
-                  onTap: () => _navigateToDetail(context, meeting),
-                ),
-              ),
+            StreamBuilder<List<Meeting>>(
+              stream: Meeting.getPastMeetings(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                if (snapshot.hasError) {
+                  return const Center(child: Text("Error loading meetings"));
+                }
+
+                final pastMeetings = snapshot.data ?? [];
+                return ListView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: pastMeetings.length,
+                  itemBuilder: (context, index) {
+                    final meeting = pastMeetings[index];
+                    return PastMeetingCard(
+                      meeting: meeting,
+                      onTap: () => _navigateToDetail(context, meeting),
+                    );
+                  },
+                );
+              },
             ),
           ],
         ),
       ),
-
       bottomNavigationBar: FloatingNavBar(
         context: context,
         currentIndex: _currentNavIndex,

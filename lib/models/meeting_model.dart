@@ -39,6 +39,41 @@ class Meeting {
       summary: data['summary'] ?? '',
     );
   }
+
+  static Stream<List<Meeting>> getUpcomingMeetings() {
+    return FirebaseFirestore.instance
+        .collection('meetings')
+        .where('date', isGreaterThan: DateTime.now())
+        .orderBy('date', descending: false) // Ascending order for upcoming
+        .snapshots()
+        .map((snapshot) => snapshot.docs
+            .map((doc) => Meeting.fromFirestore(doc))
+            .toList());
+  }
+  
+  static Stream<List<Meeting>> getPastMeetings() {
+    return FirebaseFirestore.instance
+        .collection('meetings')
+        .where('date', isLessThan: DateTime.now())
+        .orderBy('date', descending: true) // Descending order for past
+        .snapshots()
+        .map((snapshot) => snapshot.docs
+            .map((doc) => Meeting.fromFirestore(doc))
+            .toList());
+  }
+
+  Future<void> saveToFirestore() async {
+    await FirebaseFirestore.instance.collection('meetings').add({
+      'title': title,
+      'date': Timestamp.fromDate(date),
+      'duration_seconds': duration.inSeconds,
+      'audio_url': audioUrl,
+      'tags': tags,
+      'transcript': transcript.map((e) => e.toMap()).toList(),
+      'notes': notes,
+      'summary': summary,
+    });
+  }
 }
 
 class TranscriptEntry {
@@ -58,5 +93,13 @@ class TranscriptEntry {
       timestamp: Duration(seconds: map['timestamp_seconds']),
       text: map['text'],
     );
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'speaker': speaker,
+      'timestamp_seconds': timestamp.inSeconds,
+      'text': text,
+    };
   }
 }
