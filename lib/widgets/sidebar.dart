@@ -86,7 +86,6 @@ class SidebarDrawer extends StatelessWidget {
                         icon: Icons.logout,
                         text: 'Log Out',
                         onTap: () {
-                          print('SidebarDrawer: Log Out tapped');
                           authProvider.signOut();
                           Navigator.pushReplacementNamed(context, '/login');
                         },

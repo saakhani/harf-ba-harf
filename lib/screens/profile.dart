@@ -12,7 +12,7 @@ class ProfilePage extends StatelessWidget {
   Future<void> _handleChangePassword(BuildContext context) async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
-    final providers = await user.providerData;
+    final providers = user.providerData;
     final isGoogle = providers.any((p) => p.providerId == 'google.com');
     if (isGoogle) {
       Fluttertoast.showToast(
@@ -41,7 +41,7 @@ class ProfilePage extends StatelessWidget {
   Future<void> _handleDeleteAccount(BuildContext context) async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
-    final providers = await user.providerData;
+    final providers = user.providerData;
     final isGoogle = providers.any((p) => p.providerId == 'google.com');
     if (isGoogle) {
       // Google user: reauthenticate with Google
@@ -84,8 +84,8 @@ class ProfilePage extends StatelessWidget {
     String? password = await showDialog<String>(
       context: context,
       builder: (context) {
-        final TextEditingController _pwController = TextEditingController();
-        bool _obscure = true;
+        final TextEditingController pwController = TextEditingController();
+        bool obscure = true;
         return StatefulBuilder(
           builder: (context, setState) {
             return AlertDialog(
@@ -96,15 +96,15 @@ class ProfilePage extends StatelessWidget {
                   const Text('Enter your password to delete your account:'),
                   const SizedBox(height: 16),
                   TextField(
-                    controller: _pwController,
-                    obscureText: _obscure,
+                    controller: pwController,
+                    obscureText: obscure,
                     decoration: InputDecoration(
                       labelText: 'Password',
                       suffixIcon: IconButton(
                         icon: Icon(
-                          _obscure ? Icons.visibility_off : Icons.visibility,
+                          obscure ? Icons.visibility_off : Icons.visibility,
                         ),
-                        onPressed: () => setState(() => _obscure = !_obscure),
+                        onPressed: () => setState(() => obscure = !obscure),
                       ),
                     ),
                   ),
@@ -116,9 +116,9 @@ class ProfilePage extends StatelessWidget {
                   child: const Text('Cancel'),
                 ),
                 ElevatedButton(
-                  onPressed: () => Navigator.pop(context, _pwController.text),
-                  child: const Text('Delete'),
+                  onPressed: () => Navigator.pop(context, pwController.text),
                   style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                  child: const Text('Delete'),
                 ),
               ],
             );

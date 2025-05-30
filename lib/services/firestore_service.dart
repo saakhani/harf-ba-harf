@@ -52,7 +52,7 @@ class FirestoreService {
 
     final responseBody = await response.stream.bytesToString();
     final data = jsonDecode(responseBody);
-    print(data);
+    // print(data);
 
     final userId = FirebaseAuth.instance.currentUser?.uid;
     if (userId == null) {

@@ -27,7 +27,7 @@ class _HistoryPageState extends State<HistoryPage> {
                   return const Center(child: CircularProgressIndicator());
                 }
                 if (snapshot.hasError) {
-                  print('Error: ${snapshot.error}');
+                  // print('Error: ${snapshot.error}');
                   return const Center(child: Text("Error loading meetings"));
                 }
                 final pastMeetings = snapshot.data ?? [];

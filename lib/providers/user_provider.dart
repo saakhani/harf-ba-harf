@@ -9,18 +9,15 @@ class UserProvider extends ChangeNotifier {
   AppUser? get user => _user;
   bool _loading = false;
   bool get loading => _loading;
-  bool _hasLoaded = false;
   StreamSubscription<AppUser?>? _userSub;
 
   // Load user profile from Firestore (only if not already loaded)
   Future<void> loadUser() async {
-    _hasLoaded = false;
     _userSub?.cancel();
     _loading = true;
     notifyListeners();
     _user = await _userService.getCurrentUserProfile();
     _loading = false;
-    _hasLoaded = true;
     notifyListeners();
     listenToUser(); // Always listen to changes for the current user
   }
@@ -40,7 +37,6 @@ class UserProvider extends ChangeNotifier {
   void clearUser() {
     _userSub?.cancel();
     _user = null;
-    _hasLoaded = false;
     notifyListeners();
   }
 
