@@ -81,6 +81,11 @@ class AuthService {
     await _firebaseAuth.signOut();
   }
 
+  // Send password reset email
+  Future<void> sendPasswordResetEmail(String email) async {
+    await _firebaseAuth.sendPasswordResetEmail(email: email.trim());
+  }
+
   // Create Firestore user doc if it doesn't exist
   Future<void> _createUserProfileIfNeeded(User user, String name) async {
     final userDoc = FirebaseFirestore.instance
@@ -98,6 +103,7 @@ class AuthService {
         'role': 'user',
         'settings': {'language': 'en', 'notifications': true},
         'onboarded': false,
+        'deleted': false,
       });
     } else {
       await userDoc.update({'last_login': FieldValue.serverTimestamp()});

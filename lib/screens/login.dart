@@ -3,6 +3,7 @@ import 'package:harf_ba_harf/providers/user_provider.dart';
 import 'package:harf_ba_harf/screens/signup.dart';
 import 'package:harf_ba_harf/services/auth_service.dart';
 import 'package:provider/provider.dart';
+import 'package:harf_ba_harf/screens/forgot_password.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -106,6 +107,21 @@ class _LoginPageState extends State<LoginPage> {
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(10),
                   ),
+                ),
+              ),
+              const SizedBox(height: 10),
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const ForgotPasswordPage(),
+                      ),
+                    );
+                  },
+                  child: const Text('Forgot Password?'),
                 ),
               ),
               const SizedBox(height: 20),
