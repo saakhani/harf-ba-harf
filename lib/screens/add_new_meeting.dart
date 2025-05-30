@@ -133,7 +133,7 @@ class _AddMeetingFormState extends State<AddMeetingForm> {
                   title: Text(
                     _selectedDate == null
                         ? 'Select Date'
-                        : 'Date: ${_selectedDate!.toLocal()}'.split(' ')[0],
+                        : 'Date: ${_selectedDate!.toLocal()}'.split(' ')[1],
                   ),
                   trailing: const Icon(Icons.calendar_today),
                   onTap: () async {

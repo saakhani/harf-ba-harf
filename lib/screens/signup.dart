@@ -1,14 +1,52 @@
 import 'package:flutter/material.dart';
-import 'package:harf_ba_harf/services/google_signin.dart';
-class SignUpPage extends StatelessWidget {
-  final GoogleAuthService _authService = GoogleAuthService();
+import 'package:harf_ba_harf/services/auth_service.dart';
 
-  SignUpPage({super.key});
+class SignUpPage extends StatefulWidget {
+  const SignUpPage({super.key});
+
+  @override
+  State<SignUpPage> createState() => _SignUpPageState();
+}
+
+class _SignUpPageState extends State<SignUpPage> {
+  final AuthService _authService = AuthService();
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _nameController = TextEditingController();
+  bool _isLoading = false;
+  String? _errorMessage;
+
+  Future<void> _handleEmailSignUp() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      final user = await _authService.signUpWithEmail(
+        _emailController.text,
+        _passwordController.text,
+        _nameController.text,
+      );
+      if (user != null && mounted) {
+        Navigator.pushReplacementNamed(context, '/verify-email');
+      }
+    } catch (e) {
+      setState(() {
+        _errorMessage = e.toString().replaceFirst('Exception: ', '');
+      });
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Padding(
+      resizeToAvoidBottomInset: true,
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(20.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -22,6 +60,7 @@ class SignUpPage extends StatelessWidget {
 
             // Name Field
             TextField(
+              controller: _nameController,
               decoration: InputDecoration(
                 labelText: 'Name',
                 border: OutlineInputBorder(
@@ -33,6 +72,7 @@ class SignUpPage extends StatelessWidget {
 
             // Email Field
             TextField(
+              controller: _emailController,
               decoration: InputDecoration(
                 labelText: 'Email',
                 border: OutlineInputBorder(
@@ -44,6 +84,7 @@ class SignUpPage extends StatelessWidget {
 
             // Password Field
             TextField(
+              controller: _passwordController,
               obscureText: true,
               decoration: InputDecoration(
                 labelText: 'Password',
@@ -53,10 +94,6 @@ class SignUpPage extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 30),
-
-            // Divider
-            const Divider(thickness: 1),
-            const SizedBox(height: 20),
 
             // Sign Up Button
             SizedBox(
@@ -68,36 +105,24 @@ class SignUpPage extends StatelessWidget {
                     borderRadius: BorderRadius.circular(10),
                   ),
                 ),
-                onPressed: () {},
-                child: const Text('Sign Up'),
+                onPressed: _handleEmailSignUp,
+                child:
+                    _isLoading
+                        ? const CircularProgressIndicator()
+                        : const Text('Sign Up'),
               ),
             ),
-            const SizedBox(height: 30),
 
-            // Or sign up with
-            const Center(
-              child: Text(
-                'Or sign up with',
-                style: TextStyle(color: Colors.grey),
+            // Error Message
+            if (_errorMessage != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 16.0),
+                child: Text(
+                  _errorMessage!,
+                  style: const TextStyle(color: Colors.red),
+                ),
               ),
-            ),
-            const SizedBox(height: 20),
 
-            // Zoom Button
-            Center(
-              child: ElevatedButton(
-                onPressed: () async {
-                  final user = await _authService.signInWithGoogle(); // 1. Sign in
-                  if (user != null && context.mounted) {
-                    Navigator.pushReplacementNamed(
-                      context,
-                      '/home',
-                    ); // 2. Navigate only
-                  }
-                },
-                child: Text("Sign in with Google"),
-              ),
-            ),
             const SizedBox(height: 20),
 
             // Already have account

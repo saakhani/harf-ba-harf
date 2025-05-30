@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:harf_ba_harf/models/meeting_model.dart';
-import 'package:harf_ba_harf/services/firestore_service.dart';
 import 'package:harf_ba_harf/widgets/past_meeting_card.dart';
 import 'package:harf_ba_harf/widgets/navbar.dart';
 import 'package:harf_ba_harf/widgets/sidebar.dart';

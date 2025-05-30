@@ -1,33 +1,35 @@
-//main.dart
-
 import 'package:flutter/material.dart';
-import 'package:harf_ba_harf/firebase_options.dart';
-import 'package:harf_ba_harf/models/meeting_model.dart';
-import 'package:harf_ba_harf/screens/calendar.dart';
-import 'package:harf_ba_harf/screens/file_transcription.dart';
-import 'package:harf_ba_harf/screens/history.dart';
-import 'package:harf_ba_harf/screens/home.dart';
-import 'package:harf_ba_harf/screens/live_transcription.dart';
-import 'package:harf_ba_harf/screens/login.dart';
-import 'package:harf_ba_harf/screens/meeting_detail.dart';
-import 'package:harf_ba_harf/screens/profile.dart';
-import 'package:provider/provider.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:harf_ba_harf/providers/auth_provider.dart';
+import 'package:harf_ba_harf/screens/verify_email.dart';
+import 'package:provider/provider.dart';
 
+import 'firebase_options.dart';
+import 'models/meeting_model.dart';
+import 'providers/auth_provider.dart';
+import 'providers/user_provider.dart';
 
+import 'screens/calendar.dart';
+import 'screens/file_transcription.dart';
+import 'screens/history.dart';
+import 'screens/home.dart';
+import 'screens/live_transcription.dart';
+import 'screens/login.dart';
+import 'screens/meeting_detail.dart';
+import 'screens/profile.dart';
 import 'screens/signup.dart';
 
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   runApp(
     MultiProvider(
-      providers: [ChangeNotifierProvider(create: (_) => CustomAuthProvider())],
-      child: MyApp(),
+      providers: [
+        ChangeNotifierProvider(create: (_) => CustomAuthProvider()),
+        ChangeNotifierProvider(create: (_) => UserProvider()),
+      ],
+      child: const MyApp(),
     ),
   );
 }
@@ -38,16 +40,10 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'My App',
+      title: 'Harf Ba Harf',
+      navigatorKey: navigatorKey,
       theme: ThemeData(primarySwatch: Colors.blue),
-      home: Consumer<CustomAuthProvider>(
-        builder: (context, auth, child) {
-          if (auth.isLoading) {
-            return Scaffold(body: Center(child: CircularProgressIndicator()));
-          }
-          return auth.user != null ? HomePage() : LoginPage();
-        },
-      ),
+      home: const AuthGate(),
       routes: {
         '/home': (context) => HomePage(),
         '/login': (context) => LoginPage(),
@@ -57,6 +53,7 @@ class MyApp extends StatelessWidget {
         '/profile': (context) => const ProfilePage(),
         '/live-transcription': (context) => const LiveTranscriptionPage(),
         '/file-transcription': (context) => const FileTranscriptionPage(),
+        '/verify-email': (context) => const VerifyEmailPage(),
         '/meeting-detail': (context) {
           final meeting = ModalRoute.of(context)!.settings.arguments as Meeting;
           return MeetingDetailPage(meeting: meeting);
@@ -66,26 +63,55 @@ class MyApp extends StatelessWidget {
   }
 }
 
-// class AuthWrapper extends StatelessWidget {
-//   const AuthWrapper({super.key});
+class AuthGate extends StatefulWidget {
+  const AuthGate({super.key});
 
-//   @override
-//   Widget build(BuildContext context) {
-//     final authProvider = Provider.of<CustomAuthProvider>(context);
-    
-//     return StreamBuilder<User?>(
-//       stream: FirebaseAuth.instance.authStateChanges(),
-//       builder: (context, snapshot) {
-//         if (snapshot.connectionState == ConnectionState.active) {
-//           final user = snapshot.data;
-//           if (user != null) {
-//             authProvider.setUser(user);
-//             return HomePage();
-//           }
-//           return SplashScreen();
-//         }
-//         return Scaffold(body: Center(child: CircularProgressIndicator()));
-//       },
-//     );
-//   }
-// }
+  @override
+  State<AuthGate> createState() => _AuthGateState();
+}
+
+class _AuthGateState extends State<AuthGate> {
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadUserIfAuthenticated();
+    });
+  }
+
+  Future<void> _loadUserIfAuthenticated() async {
+    final authProvider = Provider.of<CustomAuthProvider>(
+      context,
+      listen: false,
+    );
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+
+    if (authProvider.user != null) {
+      await userProvider.loadUser(); // 🔥 Loads Firestore user profile
+    }
+
+    setState(() {
+      _isLoading = false;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final authProvider = Provider.of<CustomAuthProvider>(context);
+    final isAuth = authProvider.user != null;
+
+    if (_isLoading || authProvider.isLoading) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+
+    if (!isAuth) {
+      return const LoginPage();
+    } else if (!authProvider.user!.emailVerified) {
+      return const VerifyEmailPage();
+    } else {
+      return HomePage();
+    }
+  }
+}

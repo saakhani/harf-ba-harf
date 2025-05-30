@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:harf_ba_harf/providers/user_provider.dart';
 import 'package:harf_ba_harf/screens/signup.dart';
-import 'package:harf_ba_harf/services/google_signin.dart';
+import 'package:harf_ba_harf/services/auth_service.dart';
+import 'package:provider/provider.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -10,16 +12,47 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  final GoogleAuthService _authService = GoogleAuthService();
+  final AuthService _authService = AuthService();
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
   bool _isLoading = false;
   String? _errorMessage;
+
+  Future<void> _handleEmailLogin() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = null;
+    });
+
+    try {
+      final user = await _authService.loginWithEmail(
+        _emailController.text,
+        _passwordController.text,
+      );
+
+      if (user != null && mounted) {
+        // 🔥 Load Firestore user profile
+        await Provider.of<UserProvider>(context, listen: false).loadUser();
+
+        // Navigate to home
+        Navigator.pushReplacementNamed(context, '/home');
+      }
+    } catch (e) {
+      setState(() {
+        _errorMessage = e.toString();
+      });
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
 
   Future<void> _handleGoogleSignIn() async {
     setState(() {
       _isLoading = true;
       _errorMessage = null;
     });
-
     try {
       final user = await _authService.signInWithGoogle();
       if (user != null && mounted) {
@@ -28,7 +61,6 @@ class _LoginPageState extends State<LoginPage> {
     } catch (e) {
       setState(() {
         _errorMessage = 'Failed to sign in. Please try again.';
-        debugPrint('Google Sign-In Error: $e');
       });
     } finally {
       if (mounted) {
@@ -49,15 +81,13 @@ class _LoginPageState extends State<LoginPage> {
               const SizedBox(height: 60),
               const Text(
                 'Welcome Back!',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 40),
-              
+
               // Email Field
               TextField(
+                controller: _emailController,
                 decoration: InputDecoration(
                   labelText: 'Email',
                   border: OutlineInputBorder(
@@ -66,9 +96,10 @@ class _LoginPageState extends State<LoginPage> {
                 ),
               ),
               const SizedBox(height: 20),
-              
+
               // Password Field
               TextField(
+                controller: _passwordController,
                 obscureText: true,
                 decoration: InputDecoration(
                   labelText: 'Password',
@@ -77,26 +108,8 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                 ),
               ),
-              const SizedBox(height: 10),
-              
-              // Remember Me & Forgot Password
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
-                    children: [
-                      Checkbox(value: false, onChanged: (value) {}),
-                      const Text('Remember Me'),
-                    ],
-                  ),
-                  TextButton(
-                    onPressed: () {},
-                    child: const Text('Forgot Password?'),
-                  ),
-                ],
-              ),
               const SizedBox(height: 20),
-              
+
               // Login Button
               SizedBox(
                 width: double.infinity,
@@ -107,12 +120,12 @@ class _LoginPageState extends State<LoginPage> {
                       borderRadius: BorderRadius.circular(10),
                     ),
                   ),
-                  onPressed: () {},
+                  onPressed: _handleEmailLogin,
                   child: const Text('Log In'),
                 ),
               ),
               const SizedBox(height: 30),
-              
+
               // Or divider
               const Center(
                 child: Text(
@@ -121,32 +134,33 @@ class _LoginPageState extends State<LoginPage> {
                 ),
               ),
               const SizedBox(height: 20),
-              
+
               // Google Sign-In Button
               Center(
-                child: _isLoading
-                    ? const CircularProgressIndicator()
-                    : ElevatedButton(
-                        onPressed: _handleGoogleSignIn,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.white,
-                          foregroundColor: Colors.black,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                            side: BorderSide(color: Colors.grey.shade300),
+                child:
+                    _isLoading
+                        ? const CircularProgressIndicator()
+                        : ElevatedButton(
+                          onPressed: _handleGoogleSignIn,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.white,
+                            foregroundColor: Colors.black,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                              side: BorderSide(color: Colors.grey.shade300),
+                            ),
+                          ),
+                          child: const Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.g_mobiledata, size: 24),
+                              SizedBox(width: 8),
+                              Text("Sign in with Google"),
+                            ],
                           ),
                         ),
-                        child: const Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(Icons.g_mobiledata, size: 24),
-                            SizedBox(width: 8),
-                            Text("Sign in with Google"),
-                          ],
-                        ),
-                      ),
               ),
-              
+
               // Error Message
               if (_errorMessage != null)
                 Padding(
@@ -156,9 +170,9 @@ class _LoginPageState extends State<LoginPage> {
                     style: const TextStyle(color: Colors.red),
                   ),
                 ),
-              
+
               const SizedBox(height: 20),
-              
+
               // Sign Up Prompt
               Center(
                 child: TextButton(

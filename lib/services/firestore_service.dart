@@ -54,29 +54,38 @@ class FirestoreService {
     final data = jsonDecode(responseBody);
     print(data);
 
-    // Save transcription and meeting data to Firestore
-    final meetingId =
-        FirebaseFirestore.instance.collection('meetings').doc().id;
-    await FirebaseFirestore.instance.collection('meetings').doc(meetingId).set({
-      'title': title,
-      'date': DateTime.now(),
-      'duration_seconds': data['duration_seconds'],
-      'audio_url': "",
-      'tags': tags,
-      'transcript': data['transcript'],
-      'notes': '',
-      'summary': '',
-    });
-
-    // Update user's meeting IDs
     final userId = FirebaseAuth.instance.currentUser?.uid;
-    if (userId != null) {
-      final userDoc = FirebaseFirestore.instance
-          .collection('users')
-          .doc(userId);
-      await userDoc.update({
-        'meetingIDs': FieldValue.arrayUnion([meetingId]),
-      });
+    if (userId == null) {
+      throw Exception("User not logged in");
     }
+
+    // Generate a new meeting ID
+    final meetingId =
+        FirebaseFirestore.instance
+            .collection('users')
+            .doc(userId)
+            .collection('meetings')
+            .doc()
+            .id;
+
+    // Write the meeting under the user's scoped collection
+    await FirebaseFirestore.instance
+        .collection('users')
+        .doc(userId)
+        .collection('meetings')
+        .doc(meetingId)
+        .set({
+          'title': title,
+          'date': DateTime.now(),
+          'duration_seconds': data['duration_seconds'],
+          'audio_url': "",
+          'tags': tags,
+          'transcript': data['transcript'],
+          'notes': '',
+          'summary': '',
+        });
+
+    // ✅ No need to update 'meetingIDs' list in user doc anymore
   }
 }
+
