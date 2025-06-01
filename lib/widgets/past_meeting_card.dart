@@ -6,11 +6,13 @@ import 'package:intl/intl.dart';
 class PastMeetingCard extends StatelessWidget {
   final Meeting meeting;
   final VoidCallback onTap;
+  final double? uploadProgress;
 
   const PastMeetingCard({
     super.key,
     required this.meeting,
     required this.onTap,
+    this.uploadProgress,
   });
 
   @override
@@ -34,6 +36,31 @@ class PastMeetingCard extends StatelessWidget {
               _buildDateRow(context),
               const SizedBox(height: 12),
               _buildTags(),
+              const SizedBox(height: 8),
+              Text(
+                'Status: ${meeting.status}',
+                style: const TextStyle(fontSize: 14, color: Colors.black),
+              ),
+              if (uploadProgress != null && uploadProgress! < 100)
+                Padding(
+                  padding: const EdgeInsets.only(top: 8.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      LinearProgressIndicator(
+                        value: uploadProgress! / 100,
+                        minHeight: 6,
+                        backgroundColor: Colors.grey.shade300,
+                        color: Colors.blueAccent,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Uploading: ${uploadProgress!.toStringAsFixed(0)}%',
+                        style: const TextStyle(fontSize: 12, color: Colors.blueGrey),
+                      ),
+                    ],
+                  ),
+                ),
             ],
           ),
         ),

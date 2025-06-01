@@ -6,39 +6,48 @@ class Meeting {
   final String title;
   final DateTime date;
   final Duration duration;
-  final String audioUrl;
   final List<String> tags;
   final List<TranscriptEntry> transcript;
   final String notes;
   final String summary;
+  final String status;
+  double? uploadProgress; // Local-only, not from Firestore
 
   Meeting({
     required this.id,
     required this.title,
     required this.date,
     required this.duration,
-    required this.audioUrl,
     required this.tags,
     required this.transcript,
     required this.notes,
     required this.summary,
+    required this.status,
+    this.uploadProgress, // Optional, local use only
   });
 
   factory Meeting.fromFirestore(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;
     return Meeting(
       id: doc.id,
-      title: data['title'],
-      date: (data['date'] as Timestamp).toDate(),
-      duration: Duration(seconds: data['duration_seconds']),
-      audioUrl: data['audio_url'],
-      tags: List<String>.from(data['tags']),
+      title: data['title'] ?? 'Untitled Meeting',
+      date:
+          (data['date'] as Timestamp?)?.toDate() ??
+          DateTime.fromMillisecondsSinceEpoch(0),
+      duration: Duration(seconds: data['duration_seconds'] ?? 0),
+      tags:
+          data['tags'] != null
+              ? List<String>.from(data['tags'] as List)
+              : <String>[],
       transcript:
-          (data['transcript'] as List<dynamic>)
-              .map((entry) => TranscriptEntry.fromMap(entry))
-              .toList(),
+          data['transcript'] != null
+              ? (data['transcript'] as List<dynamic>)
+                  .map((entry) => TranscriptEntry.fromMap(entry))
+                  .toList()
+              : <TranscriptEntry>[],
       notes: data['notes'] ?? '',
       summary: data['summary'] ?? '',
+      status: data['status'] ?? 'unknown',
     );
   }
 
@@ -48,7 +57,8 @@ class Meeting {
         .collection('users')
         .doc(userId)
         .collection('meetings')
-        .where('date', isGreaterThan: DateTime.now())
+        .where('status', isEqualTo: 'upcoming') // ✅ skip 'processing' meetings
+        .where('date', isGreaterThan: Timestamp.fromDate(DateTime.now()))
         .orderBy('date', descending: false) // Ascending order for upcoming
         .snapshots()
         .map(
@@ -63,7 +73,7 @@ class Meeting {
         .collection('users')
         .doc(userId)
         .collection('meetings')
-        .where('date', isLessThan: DateTime.now())
+        .where('date', isLessThanOrEqualTo: DateTime.now())
         .orderBy('date', descending: true) // Descending order for past
         .snapshots()
         .map(
@@ -82,7 +92,6 @@ class Meeting {
           'title': title,
           'date': Timestamp.fromDate(date),
           'duration_seconds': duration.inSeconds,
-          'audio_url': audioUrl,
           'tags': tags,
           'transcript': transcript.map((e) => e.toMap()).toList(),
           'notes': notes,

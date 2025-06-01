@@ -40,9 +40,10 @@ class UpcomingMeetingCard extends StatelessWidget {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => AddMeetingForm(
-              meeting: meeting, // Pass the meeting to the form
-            ),
+            builder:
+                (context) => AddMeetingForm(
+                  meeting: meeting, // Pass the meeting to the form
+                ),
           ),
         );
       },
@@ -56,7 +57,10 @@ class UpcomingMeetingCard extends StatelessWidget {
             children: [
               Text(
                 title,
-                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               const SizedBox(height: 8),
               Text(time, style: TextStyle(color: Colors.grey.shade700)),
@@ -64,6 +68,10 @@ class UpcomingMeetingCard extends StatelessWidget {
               Text(
                 'Duration: $duration',
                 style: TextStyle(color: Colors.grey.shade700),
+              ),
+              Text(
+                'Status: ${meeting.status}',
+                style: const TextStyle(fontSize: 14, color: Colors.grey),
               ),
               if (notes != null) ...[
                 const SizedBox(height: 12),

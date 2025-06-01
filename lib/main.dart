@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:harf_ba_harf/providers/upload_progress_provider.dart';
 import 'package:harf_ba_harf/screens/verify_email.dart';
 import 'package:provider/provider.dart';
 
@@ -26,6 +27,7 @@ void main() async {
   runApp(
     MultiProvider(
       providers: [
+                ChangeNotifierProvider(create: (_) => UploadProgressProvider()),
         ChangeNotifierProvider(create: (_) => CustomAuthProvider()),
         ChangeNotifierProvider(create: (_) => UserProvider()),
       ],

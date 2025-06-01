@@ -68,11 +68,11 @@ class _AddMeetingFormState extends State<AddMeetingForm> {
         title: _titleController.text,
         date: startDateTime,
         duration: endDateTime.difference(startDateTime),
-        audioUrl: widget.meeting?.audioUrl ?? '',
         tags: widget.meeting?.tags ?? [],
         transcript: widget.meeting?.transcript ?? [],
         notes: _notesController.text,
         summary: widget.meeting?.summary ?? '',
+        status: widget.meeting?.status ?? 'scheduled',
       );
 
       if (widget.meeting == null) {
@@ -87,7 +87,6 @@ class _AddMeetingFormState extends State<AddMeetingForm> {
           'title': newMeeting.title,
           'date': Timestamp.fromDate(newMeeting.date),
           'duration_seconds': newMeeting.duration.inSeconds,
-          'audio_url': newMeeting.audioUrl,
           'tags': newMeeting.tags,
           'transcript': newMeeting.transcript.map((e) => e.toMap()).toList(),
           'notes': newMeeting.notes,

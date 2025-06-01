@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:harf_ba_harf/providers/upload_progress_provider.dart';
 import 'package:harf_ba_harf/services/firestore_service.dart';
 import 'package:harf_ba_harf/services/remote_config_service.dart';
+import 'package:provider/provider.dart';
 
 class FileTranscriptionPage extends StatefulWidget {
   const FileTranscriptionPage({super.key});
@@ -23,6 +25,9 @@ class _FileTranscriptionPageState extends State<FileTranscriptionPage> {
       setState(() {
         _filePath = result.files.single.path;
       });
+      print("🎧 File selected: $_filePath");
+    } else {
+      print("⚠️ No file selected.");
     }
   }
 
@@ -33,6 +38,7 @@ class _FileTranscriptionPageState extends State<FileTranscriptionPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Please select a file to upload.')),
         );
+        print("❌ Upload cancelled: No file selected.");
         return;
       }
 
@@ -41,24 +47,47 @@ class _FileTranscriptionPageState extends State<FileTranscriptionPage> {
       });
 
       try {
+        print("🚀 Initializing remote config...");
         final remoteConfig = await RemoteConfigService.initialize();
         final ngrokUrl = remoteConfig.ngrokUrl;
+        print("🌐 FastAPI URL: $ngrokUrl");
 
-        // Send file to backend for transcription
         final firestoreService = FirestoreService();
-        await firestoreService.uploadAndTranscribe(
-          filePath: _filePath!,
+
+        print("📄 Creating Firestore meeting document...");
+        final meetingId = await firestoreService.createMeetingEntryAutoId(
           title: _title!,
           tags: _tags,
-          backendUrl: ngrokUrl,
+          filePath: _filePath!,
+        );
+        final uploadProgressProvider = Provider.of<UploadProgressProvider>(
+          context,
+          listen: false,
         );
 
+        print("✅ Firestore document created with ID: $meetingId");
+
+        print("📤 Uploading file to FastAPI...");
+        firestoreService
+            .uploadAndTranscribe(
+              filePath: _filePath!,
+              meetingId: meetingId,
+              backendUrl: ngrokUrl,
+              onProgress: (progress) {
+                uploadProgressProvider.setProgress(meetingId, progress);
+              },
+            )
+            .then((_) => print("🧠 Backend transcription triggered."))
+            .catchError((e) => print("❌ FastAPI error: $e"));
+
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('File uploaded successfully!')),
+          const SnackBar(content: Text('File uploaded! Processing started.')),
         );
-        Navigator.pop(context);
+
+        print("🔙 Returning to home screen...");
+        Navigator.of(context).popUntil((route) => route.isFirst);
       } catch (e) {
-        print(e);
+        print("❌ Exception during upload: $e");
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text('Error: $e')));
