@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:harf_ba_harf/models/meeting_model.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class AddMeetingForm extends StatefulWidget {
   final Meeting? meeting; // Optional Meeting object for editing
@@ -79,8 +80,11 @@ class _AddMeetingFormState extends State<AddMeetingForm> {
         // Create a new meeting
         await newMeeting.saveToFirestore();
       } else {
-        // Update the existing meeting
+        // Update the existing meeting in the correct user path
+        final userId = FirebaseAuth.instance.currentUser!.uid;
         await FirebaseFirestore.instance
+            .collection('users')
+            .doc(userId)
             .collection('meetings')
             .doc(newMeeting.id)
             .update({
@@ -91,6 +95,7 @@ class _AddMeetingFormState extends State<AddMeetingForm> {
           'transcript': newMeeting.transcript.map((e) => e.toMap()).toList(),
           'notes': newMeeting.notes,
           'summary': newMeeting.summary,
+          'status': newMeeting.status,
         });
       }
 

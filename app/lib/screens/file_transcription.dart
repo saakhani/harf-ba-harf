@@ -73,9 +73,6 @@ class _FileTranscriptionPageState extends State<FileTranscriptionPage> {
               filePath: _filePath!,
               meetingId: meetingId,
               backendUrl: ngrokUrl,
-              onProgress: (progress) {
-                uploadProgressProvider.setProgress(meetingId, progress);
-              },
             )
             .then((_) => print("🧠 Backend transcription triggered."))
             .catchError((e) => print("❌ FastAPI error: $e"));

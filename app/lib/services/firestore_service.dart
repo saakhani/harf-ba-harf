@@ -83,7 +83,6 @@ class FirestoreService {
     required String filePath,
     required String meetingId,
     required String backendUrl,
-      required void Function(double) onProgress,
   }) async {
     final user = _auth.currentUser;
     if (user == null) {
@@ -117,25 +116,8 @@ class FirestoreService {
 
 
     final response = await request.send();
-      final total = File(filePath).lengthSync();
-  int bytesTransferred = 0;
-    response.stream.listen(
-    (chunk) {
-      bytesTransferred += chunk.length;
-      double progress = (bytesTransferred / total) * 100;
-      onProgress(progress);
-    },
-    onDone: () async {
-      print("✅ Upload complete.");
-      onProgress(100);
-      await response.stream.drain(); // Ensure full stream read
-    },
-    onError: (e) {
-      print("❌ Error uploading: $e");
-      throw Exception("Upload failed");
-    },
-    cancelOnError: true,
-  );
+
+
 
     if (response.statusCode == 200) {
       print("✅ Upload successful, backend processing started.");

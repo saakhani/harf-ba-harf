@@ -21,11 +21,15 @@ dependencies:
   fluttertoast: ^8.2.4
   firebase_remote_config: ^5.4.3
   http_parser: ^4.1.2
+  googleapis: ^13.1.0
+  shared_preferences: ^2.2.2
+  table_calendar: ^3.1.0
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^5.0.0
+  flutter_launcher_icons: ^0.13.1
 
 flutter:
   uses-material-design: true
@@ -36,3 +40,7 @@ flutter:
         - asset: assets/fonts/NotoNastaliqUrdu-Medium.ttf
         - asset: assets/fonts/NotoNastaliqUrdu-Bold.ttf
         - asset: assets/fonts/NotoNastaliqUrdu-SemiBold.ttf
+
+flutter_launcher_icons:
+  android: true
+  image_path: "assets/icon/app_icon.png"

@@ -57,7 +57,7 @@ class Meeting {
         .collection('users')
         .doc(userId)
         .collection('meetings')
-        .where('status', isEqualTo: 'upcoming') // ✅ skip 'processing' meetings
+        .where('status', isEqualTo: 'scheduled') // ✅ skip 'processing' meetings
         .where('date', isGreaterThan: Timestamp.fromDate(DateTime.now()))
         .orderBy('date', descending: false) // Ascending order for upcoming
         .snapshots()
@@ -96,6 +96,7 @@ class Meeting {
           'transcript': transcript.map((e) => e.toMap()).toList(),
           'notes': notes,
           'summary': summary,
+          'status': status,
         });
   }
 }

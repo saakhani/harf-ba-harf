@@ -1,6 +1,6 @@
-# ------------------ Installations ------------------
-# THIS IS TO BE RUN ON GOOGLE COLLAB, REMOVE IF RUNNING LOCALLY, INSTALL PACKAGES IN THE LOCAL ENVIRONMENT
-!pip install pyngrok pyannote.audio pydub fastapi uvicorn python-multipart google-cloud-firestore --quiet
+# ---------------------- Installations ----------------------
+!pip install pyngrok pyannote.audio pydub fastapi uvicorn python-multipart --quiet
+!pip install google-cloud-firestore --quiet
 
 # ------------------ Imports ------------------
 import nest_asyncio
@@ -18,8 +18,7 @@ import time
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
 import firebase_admin
-from firebase_admin import credentials, initialize_app
-from google.cloud import firestore
+from firebase_admin import credentials, firestore
 
 # ------------------ Setup ------------------
 device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -27,18 +26,16 @@ torch_dtype = torch.float16 if torch.cuda.is_available() else torch.float32
 print(device)
 print(torch_dtype)
 
-# ------------------ Environment Secrets ------------------
-NGROK_AUTHTOKEN = "2wVJam0DHTNJ4tCdn6KruZSSVJh_4c7p2JxGgF1gmyhX2mMLP" # Saad's token
-
-hf_token = "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" # Saad's token
-
-service_account_key = {
+# ---------------------- Secrets----------------------
+NGROK_AUTHTOKEN = "2wVJam0DHTNJ4tCdn6KruZSSVJh_4c7p2JxGgF1gmyhX2mMLP"
+hf_token = "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"
+service_account_key ={
   "type": "service_account",
   "project_id": "fyp-harfbaharf",
-  "private_key_id": "f75a3e85812c562a5e85e4de5f3354630d805120",
-  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCl2W8xpPEulwxG\n5qp4TbeXw55/m2KHYWLYnm/H4W6L+3lxb2kgtMrv1r5N00ktqGEJKTh9VKzTboZf\n/od31Rxp37IdFijd4PF5bgn3KDqQxSsh2rRgdvc0vfyfWlhVeitwhlX/gpJLtz6M\nmfMmNkkqJOIXHSSseczllQ4K+AhPFzHK4hNgzaYMvvye9T0Rss58bO2Ga+7zq7Sk\nuyuciQ2LpLuI8tFGYT6crz3LKj3wfzfUX2747Fa+LYh2mElGZwW5tnyGJsIU8tpi\n3CysfB6KCanxYqoyfhSHy/YvsQt3QT6r/Z9uzMMYfSGFY1Bet8ePJQJWhv/B+wJA\n6hUMdNGrAgMBAAECggEASzpQfKVDnQ14zSROCNm/wEBEQb+atqvO6VEchP7VZPuB\nf5m4htRbBOVUVvrSw7oPodcnv3nMFu+YViyfCBULmV6VbSojCVnCToFCVfDSd95n\njSimDueHhE31K9cQIF2VHKpikc6JS3zoC2C9cQTItSwbvb5DZ1SsQysUPpd5NV4k\noS5LFwbvhzxUCTcEwnbpn0YgUjAOGqnhevAoX/2OUgbVMFnHmS+PSSeSLeDdtzba\nB6PhaSWNEayL5rSPcC6GNyTMTEezh7BJs3jZ+8sN5X3IsOup+6KngqroDgHvdcpF\n0kIeQMwxzBPnxqs5cYdWcQFj1NloYhJq8O5N2DO6QQKBgQDpTgcFW4/TedbOyZ8v\nLTsiOF6O/0xZPf0HWjeM+ZIfvT2CDox030QI5UDYtIVJWEKktuLMyNqkW8TjI1EI\n4tHDdyGwd0gvD814GwyTx5lvd+qCegTzraxy8iS0m0k5/h2q6K+a4VKTqczpnBaU\nKIWy3V0hechOP5BusZZJ+FWSiwKBgQC1+5GjP/bmgirDKgXsMNJWDXFhprMBh9Vy\nD7U80tihWu14b8peen9nrOrmY6ZYbe5aPUGVKqlLmhHKtxNJi6Lp31k3se6Vx/Yj\nAy31191Ap83tUpdPEFt8bB2TH+gTrqvt+XkN/eYwJ0YqpPURL3r6qIiDz5EisFpT\ndcHPRtlBYQKBgDMcAdO9pDtqxJEWgEXgfcTYXnarHPmr58N1kxfSEJ3dYh0cvM5Z\nntjoCBWxLkXMDQVyfyrnkWZSKEauFPGCZvuQHJRA/VI5/wQhwNaa8lUGCxy8SFtt\nn4qq2zmpjxgiQDORt+6RD/sDRr2ikRux6OAvOFi+ChCCQkzNoKPhwDVTAoGBAJ9m\n3Pmu5JiiOcy7eXaaiRLhMYhEmRVlIryHL8w4L5Keb9WHri41hHWOjC8D6Ega+qXG\ndDSxqprTOHRlChromenbPm2/iGlgPqQKe+6Uh3PDyGfxaSHTBR+mH/2n/AOJg4Wu\neK+dz0wsipR96z+DZGg8yV8TqGBHMsdaJUpnF5PhAoGAKgxaOz6bC7bGEdIn1GE9\n2wTgk068i2hbwZNmPJsM8gl9f8GCA/amrU6ObhS4/BXz2x5cJSLAoBobRsB2KVmb\ncszwxf6lWbOOnz7LYCKsJCRpd3xDvA1l2kPSJoM/sUBmemYf1YbcP2KLczAsc89c\nvLFnQF5tkItk3kwmlqZMKdM=\n-----END PRIVATE KEY-----\n",
+  "private_key_id": "3333db1868dac77db7b1cacc19b462868407ff7c",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQCrTvDKPCI5mMlC\nnVvr69qRAFZzARx0MX30nXCQppZCdGWkTkvMj+OakhTXBSgpbFLxnzJ7eOqtljBl\nhZkf0YmY9wDD/sHFQD/cxlbDFaoz4W9rjIhicLRJVnWoM2WASRcBTuCjmN9KUIr3\nFA7IyXQdyIHR00j1U0IteIUdnHDy21z+NYKp1ZdLngmKRpxvasc/9QKrmzAra19d\nGD90LPNo68oojxZVtVJ4LgOKfCCMB4ffhhUrSTZmjdsutfG579j5EAQHDdBLYoPU\nXSmHVkUJzxfpULg6MlmOZ2HZnbQVWDb67zkxLVU8kuTklpQoYKbXlBverXuz4Akr\nwRov0KS1AgMBAAECggEAHfz5MOXa9es1nCgwzblhbw24lHRG115MltQyvteyqRp4\nKo2cPkiYBth4tnVMJQg18t8z9qJhrpaCjVsYRZYoOLNQmn7Py+hl5Y+A47C4tVFK\n8HBO9bCWFtqASTwKEi15TfzRXUInIHq+AOeteN+vKIGPnDwY4v06sfwNjXPz38dW\nCpCE9sQgAQGOSfJoc+V+2tAb0HCXPcxAATcHH63iQhLC8qNolUm4PngLKYAcIbAz\n44IWxAxzV235rfcaO73CXAL0QXenNuh67GkFhYljYGrJFm/hLWzWS+S0dlRXpNNB\neIaRttjC3EIf/GZ4uD/BOr6v+BZrPrC06faH9MFRgQKBgQDrfAM0Xquo19HtBbQ3\nrHmSG7Qi5furNY8wrcnz3GSQxSZf9DziOQ7Yd23W33aOyPioxWLYp3ibyK7FiFnY\nN1lH8MLnngMYd26XaOtZRBwn0W250raizDxdSrhY1na9GO9U8kr3OShkiZS7ESIC\nkMTpZWsSSxc1vAjmRKaLAe6R9QKBgQC6O52AtMwgqAt0dUsaFINWfpfobcYsu39W\nVoRMoDqAbiCXIApp6xVpOsW9LIy+/Hnu9nrhbNZoerJ2/zsl9CrxWIONPnUKlDJc\ny+666BYoHSoeDXnhuH12GE4J2SwetnTyxjjxdgGIXlrzn8mmc3twzscBl9FrwT0Q\nvw/lGAJPwQKBgQDpY73hV7sW2uBq5G5bh4vuLZr5w6sNY0YJ3xT7pwHdIikIjQ8S\nv65hCO1KO6xLlBAvZYK0bDdzXxEpIhy52RGZ5Zum58r1otlvI0Ou83xcUotH0vnE\nnFtvszDGi7ifbmk2bfWy1WmdS2aniTGGDWm8URIvzVCxpy3C22Oc/ksvSQKBgQCW\n/aSqaGukAnsfFcYpQ/5kT0k8glwNgoswZf7n3XTxEdjMjobC732xjpwpz4fhhPQb\nYa2pPUPs+6XcQv0ivX9fpAMsrjnYtOTMRe+tjGQCa/rs2MI71wepivUimPhjgkz5\nVOtwIdwGQ3H8Wk307WZkxNGmof+CHO80t6Pce4XMQQKBgGRAD3CzZGETtE2ai63D\np3Wc9Bhd8ahim5o1U9itqFlyMZiUYKjKeU6VAW33KuySF9Uh87KoUWzqABTMnvas\nTUGX9ocbsrjvLpCBlEP7MjwVdheR/UynYjW6Ffn0WoFVo4+X9RZUOR3DDyXBEwlA\nV0ROmS5N2ieB1e2uMU15zzTc\n-----END PRIVATE KEY-----\n",
   "client_email": "firebase-adminsdk-fbsvc@fyp-harfbaharf.iam.gserviceaccount.com",
-  "client_id": "118362267373980250995",
+  "client_id": "108201991306169920765",
   "auth_uri": "https://accounts.google.com/o/oauth2/auth",
   "token_uri": "https://oauth2.googleapis.com/token",
   "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
@@ -46,14 +43,12 @@ service_account_key = {
   "universe_domain": "googleapis.com"
 }
 
-# ------------------ Initializations ------------------
 
-if not firebase_admin._apps:
-    cred = credentials.Certificate(service_account_key)
-    initialize_app(cred)
+# ------------------ Initialize ------------------
+cred = credentials.Certificate(service_account_key)
+firebase_admin.initialize_app(cred)
+db = firestore.client()
 
-db = firestore.Client()
-cached_transcript = []
 app = FastAPI()
 
 app.add_middleware(
@@ -63,6 +58,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+cached_transcript = []
+
 
 diar_pipeline = DiarizationPipeline.from_pretrained("pyannote/speaker-diarization-3.1", use_auth_token=hf_token).to(torch.device(device))
 
@@ -97,6 +95,33 @@ def ensure_format(audio_path, original_filename):
             audio.set_frame_rate(16000).set_channels(1).export(tmp.name, format="wav")
             return tmp.name
     return audio_path
+
+# ---------------------- Repetition Cleaning Function ----------------------
+def clean_repetitions(text, max_repeats=1):
+    words = text.split()
+
+    def remove_ngram_repeats(words, n):
+        if len(words) < n:
+            return words
+        cleaned = []
+        i = 0
+        while i <= len(words) - n:
+            ngram = tuple(words[i:i+n])
+            repeat_count = 1
+            while i + repeat_count * n <= len(words) - n and tuple(words[i + repeat_count * n:i + (repeat_count + 1) * n]) == ngram:
+                repeat_count += 1
+            repeats_to_add = min(repeat_count, max_repeats)
+            for _ in range(repeats_to_add):
+                cleaned.extend(ngram)
+            i += repeat_count * n
+        if i < len(words):
+            cleaned.extend(words[i:])
+        return cleaned
+
+    for n in [3, 2, 1]:
+        words = remove_ngram_repeats(words, n)
+
+    return " ".join(words)
 
 # ------------------ Routes ------------------
 @app.get("/", response_class=HTMLResponse)
@@ -192,6 +217,7 @@ async def diarize_transcribe(
     user_id: str = Form(...),
     meeting_id: str = Form(...),
     audio: UploadFile = File(...)):
+      print("function accessed")
       try:
         global cached_transcript
         cached_transcript.clear()
@@ -249,7 +275,7 @@ async def diarize_transcribe(
             cached_transcript.append({
                 "speaker": speaker,
                 "timestamp_seconds": ts,
-                "text": res["text"].strip()
+                "text": clean_repetitions(res["text"].strip())
             })
 
         for f in temp_files:
@@ -259,7 +285,7 @@ async def diarize_transcribe(
 
         duration_seconds = int(len(full_audio) / 1000)# Duration in seconds
 
-        # Write result to Firebase
+# ✅ Write result to Firebase
         try:
           doc_ref = db.collection('users').document(user_id).collection('meetings').document(meeting_id)
           doc_ref.update({
@@ -314,3 +340,8 @@ def run_api():
 # Start FastAPI in a thread (Colab-safe)
 nest_asyncio.apply()
 threading.Thread(target=run_api).start()
+
+
+# # Keep cell alive to show logs
+# while True:
+#     time.sleep(1)
