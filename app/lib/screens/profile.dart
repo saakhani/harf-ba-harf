@@ -1,6 +1,8 @@
 // profile_page.dart
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:harf_ba_harf/services/app_colors.dart';
+import 'package:harf_ba_harf/services/text_styles.dart';
 import 'package:harf_ba_harf/widgets/navbar.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -164,11 +166,23 @@ class ProfilePage extends StatelessWidget {
   Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
     return Scaffold(
+      appBar: AppBar(automaticallyImplyLeading: false),
       body: Center(
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment:
+              CrossAxisAlignment.start, // <-- left align heading
           children: [
-            const Text('Profile Page'),
+            Padding(
+              padding: const EdgeInsets.only(left: 16.0, top: 8.0, bottom: 4.0),
+              child: Text(
+                "Calendar",
+                style: AppTextStyles.pageTitle.copyWith(
+                  color: AppColors.blackish,
+                ),
+                textAlign: TextAlign.left, // ensure left alignment
+              ),
+            ),
+            // force
             const SizedBox(height: 24),
             if (user != null)
               FutureBuilder<List<UserInfo>>(
@@ -179,6 +193,7 @@ class ProfilePage extends StatelessWidget {
                     (p) => p.providerId == 'google.com',
                   );
                   return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       ElevatedButton(
                         onPressed:

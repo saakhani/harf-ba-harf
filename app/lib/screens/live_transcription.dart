@@ -1,6 +1,8 @@
 // live_transcription_page.dart
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:harf_ba_harf/services/app_colors.dart';
+import 'package:harf_ba_harf/services/text_styles.dart';
 import 'package:harf_ba_harf/widgets/navbar.dart';
 import 'package:http/http.dart' as http;
 
@@ -72,77 +74,98 @@ class _LiveTranscriptionPageState extends State<LiveTranscriptionPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Live Transcription')),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'Trigger ZoomBot to Join Meeting',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+      appBar: AppBar(automaticallyImplyLeading: false),
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start, // <-- left align heading
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(left: 16.0, top: 8.0, bottom: 4.0),
+            child: Text(
+              "Live Transcription",
+              style: AppTextStyles.pageTitle.copyWith(
+                color: AppColors.blackish,
               ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _zoomLinkController,
-                decoration: const InputDecoration(
-                  labelText: 'Zoom Link (optional)',
-                ),
-              ),
-              Row(
+              textAlign: TextAlign.left, // ensure left alignment
+            ),
+          ),
+          SingleChildScrollView(
+            padding: const EdgeInsets.all(16.0),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Expanded(
-                    child: TextFormField(
-                      controller: _meetingIdController,
-                      decoration: const InputDecoration(
-                        labelText: 'Meeting ID (optional)',
-                      ),
+                  const Text(
+                    'Trigger ZoomBot to Join Meeting',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                  ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _zoomLinkController,
+                    decoration: const InputDecoration(
+                      labelText: 'Zoom Link (optional)',
                     ),
                   ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: TextFormField(
-                      controller: _passcodeController,
-                      decoration: const InputDecoration(
-                        labelText: 'Passcode (optional)',
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextFormField(
+                          controller: _meetingIdController,
+                          decoration: const InputDecoration(
+                            labelText: 'Meeting ID (optional)',
+                          ),
+                        ),
                       ),
-                    ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: TextFormField(
+                          controller: _passcodeController,
+                          decoration: const InputDecoration(
+                            labelText: 'Passcode (optional)',
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
+                  const SizedBox(height: 8),
+                  TextFormField(
+                    controller: _userNameController,
+                    decoration: const InputDecoration(
+                      labelText: 'Your Full Name',
+                    ),
+                    validator:
+                        (v) => v == null || v.isEmpty ? 'Required' : null,
+                  ),
+                  const SizedBox(height: 8),
+                  TextFormField(
+                    controller: _durationController,
+                    decoration: const InputDecoration(
+                      labelText: 'Recording Duration (seconds)',
+                    ),
+                    keyboardType: TextInputType.number,
+                  ),
+                  const SizedBox(height: 16),
+                  _isLoading
+                      ? const Center(child: CircularProgressIndicator())
+                      : SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          onPressed: _triggerZoomBot,
+                          child: const Text('Join Zoom Meeting'),
+                        ),
+                      ),
+                  if (_responseMessage != null) ...[
+                    const SizedBox(height: 16),
+                    Text(
+                      _responseMessage!,
+                      style: TextStyle(color: Colors.blue),
+                    ),
+                  ],
                 ],
               ),
-              const SizedBox(height: 8),
-              TextFormField(
-                controller: _userNameController,
-                decoration: const InputDecoration(labelText: 'Your Full Name'),
-                validator: (v) => v == null || v.isEmpty ? 'Required' : null,
-              ),
-              const SizedBox(height: 8),
-              TextFormField(
-                controller: _durationController,
-                decoration: const InputDecoration(
-                  labelText: 'Recording Duration (seconds)',
-                ),
-                keyboardType: TextInputType.number,
-              ),
-              const SizedBox(height: 16),
-              _isLoading
-                  ? const Center(child: CircularProgressIndicator())
-                  : SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: _triggerZoomBot,
-                      child: const Text('Join Zoom Meeting'),
-                    ),
-                  ),
-              if (_responseMessage != null) ...[
-                const SizedBox(height: 16),
-                Text(_responseMessage!, style: TextStyle(color: Colors.blue)),
-              ],
-            ],
+            ),
           ),
-        ),
+        ],
       ),
       bottomNavigationBar: FloatingNavBar(context: context, currentIndex: 0),
     );

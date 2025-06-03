@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:harf_ba_harf/services/app_colors.dart';
+import 'package:harf_ba_harf/services/text_styles.dart';
 import 'package:provider/provider.dart';
 import 'package:harf_ba_harf/models/meeting_model.dart';
 import 'package:harf_ba_harf/widgets/past_meeting_card.dart';
@@ -32,7 +34,6 @@ class _HomePageState extends State<HomePage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Your Meetings Today"),
         actions: [
           PopupMenuButton<String>(
             icon: const Icon(Icons.add),
@@ -49,22 +50,23 @@ class _HomePageState extends State<HomePage> {
                 ).then((_) => setState(() {}));
               }
             },
-            itemBuilder: (context) => [
-              const PopupMenuItem<String>(
-                value: 'live',
-                child: ListTile(
-                  leading: Icon(Icons.mic),
-                  title: Text('Live Transcription'),
-                ),
-              ),
-              const PopupMenuItem<String>(
-                value: 'file',
-                child: ListTile(
-                  leading: Icon(Icons.upload_file),
-                  title: Text('File Transcription'),
-                ),
-              ),
-            ],
+            itemBuilder:
+                (context) => [
+                  const PopupMenuItem<String>(
+                    value: 'live',
+                    child: ListTile(
+                      leading: Icon(Icons.mic),
+                      title: Text('Live Transcription'),
+                    ),
+                  ),
+                  const PopupMenuItem<String>(
+                    value: 'file',
+                    child: ListTile(
+                      leading: Icon(Icons.upload_file),
+                      title: Text('File Transcription'),
+                    ),
+                  ),
+                ],
           ),
           const SizedBox(width: 8),
         ],
@@ -81,12 +83,12 @@ class _HomePageState extends State<HomePage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
+                "Your Meetings Today",
+                style: AppTextStyles.pageTitle.copyWith(color: AppColors.blackish),
+              ),
+              Text(
                 currentDate,
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.grey.shade700,
-                ),
+                style: AppTextStyles.subtext.copyWith(color: AppColors.blackish),
               ),
               const SizedBox(height: 8),
               Align(
@@ -97,12 +99,11 @@ class _HomePageState extends State<HomePage> {
                   },
                   icon: const Icon(Icons.calendar_today, size: 16),
                   label: const Text("Calendar View"),
+                  style: TextButton.styleFrom(
+                    foregroundColor: AppColors.mainSageGreen,
+                    textStyle: AppTextStyles.body2
+                  ),
                 ),
-              ),
-              const SizedBox(height: 16),
-              const Text(
-                "Upcoming Meetings",
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 16),
               StreamBuilder<List<Meeting>>(
@@ -123,14 +124,7 @@ class _HomePageState extends State<HomePage> {
                       final meeting = meetings[index];
                       return UpcomingMeetingCard(
                         meeting: meeting,
-                        title: meeting.title,
-                        time:
-                            '${DateFormat('h:mm a').format(meeting.date)} - '
-                            '${DateFormat('h:mm a').format(meeting.date.add(meeting.duration))}',
-                        duration: '${meeting.duration.inMinutes} minutes',
-                        notes: meeting.notes,
-                        color: upcomingColors[index % upcomingColors.length],
-                        margin: const EdgeInsets.only(bottom: 16),
+                        index: index,
                       );
                     },
                   );
@@ -140,16 +134,21 @@ class _HomePageState extends State<HomePage> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
+                  Text(
                     "History",
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                    style: AppTextStyles.pageTitle.copyWith(color: AppColors.blackish),
                   ),
                   TextButton(
                     onPressed: () => Navigator.pushNamed(context, '/history'),
                     child: const Text("View All"),
+                    style: TextButton.styleFrom(
+                      foregroundColor: AppColors.mainSageGreen,
+                      textStyle: AppTextStyles.body2,
+                    ),
                   ),
                 ],
               ),
+              const SizedBox(height: 8),
               StreamBuilder<List<Meeting>>(
                 stream: Meeting.getPastMeetings(),
                 builder: (context, snapshot) {
@@ -170,8 +169,9 @@ class _HomePageState extends State<HomePage> {
                       final meeting = pastMeetings[index];
                       return PastMeetingCard(
                         meeting: meeting,
-                        uploadProgress:
-                            progressProvider.getProgress(meeting.id),
+                        uploadProgress: progressProvider.getProgress(
+                          meeting.id,
+                        ),
                         onTap: () => _navigateToDetail(context, meeting),
                       );
                     },

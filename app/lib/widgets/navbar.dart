@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:harf_ba_harf/screens/home.dart';
+import 'package:harf_ba_harf/services/app_colors.dart';
 
 class FloatingNavBar extends StatelessWidget {
   final BuildContext context;
@@ -72,14 +73,14 @@ class FloatingNavBar extends StatelessWidget {
         children: [
           Icon(
             icon,
-            color: currentIndex == index ? Colors.blue : Colors.grey,
+            color: currentIndex == index ? AppColors.mainSageGreen : AppColors.darkGrey,
             size: 28,
           ),
           const SizedBox(height: 4),
           Text(
             label,
             style: TextStyle(
-              color: currentIndex == index ? Colors.blue : Colors.grey,
+              color: currentIndex == index ? AppColors.mainSageGreen : AppColors.darkGrey,
               fontSize: 12,
             ),
           ),

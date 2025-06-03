@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:harf_ba_harf/models/meeting_model.dart';
 import 'package:harf_ba_harf/screens/add_new_meeting.dart';
+import 'package:harf_ba_harf/services/app_colors.dart';
+import 'package:harf_ba_harf/services/text_styles.dart';
 import 'package:harf_ba_harf/widgets/navbar.dart';
 import 'package:table_calendar/table_calendar.dart';
 import '../services/google_calendar_service.dart';
 import 'package:googleapis/calendar/v3.dart' as calendar;
-
 
 class CalendarPage extends StatefulWidget {
   const CalendarPage({super.key});
@@ -136,7 +137,7 @@ class _CalendarPageState extends State<CalendarPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Calendar'),
+        automaticallyImplyLeading: false,
         actions: [
           IconButton(
             icon: const Icon(Icons.add),
@@ -146,8 +147,44 @@ class _CalendarPageState extends State<CalendarPage> {
         ],
       ),
       body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start, // <-- left align heading
         children: [
+          Padding(
+            padding: const EdgeInsets.only(left: 16.0, top: 8.0, bottom: 4.0),
+            child: Text(
+              "Calendar",
+              style: AppTextStyles.pageTitle.copyWith(
+                color: AppColors.blackish,
+              ),
+              textAlign: TextAlign.left, // ensure left alignment
+            ),
+          ),
+          // forces left align on all platforms
           TableCalendar(
+            daysOfWeekHeight: 40,
+            calendarStyle: CalendarStyle(
+              cellMargin: EdgeInsets.all(10),
+              todayDecoration: BoxDecoration(
+                color:
+                    AppColors
+                        .sageGreenLight, // Color for today circle background
+                shape: BoxShape.circle,
+              ),
+              todayTextStyle: TextStyle(
+                color: AppColors.blackish, // Text color for today
+                fontWeight: FontWeight.bold,
+              ),
+              selectedDecoration: BoxDecoration(
+                color:
+                    AppColors
+                        .mainSageGreen, // Background color for selected day
+                shape: BoxShape.circle,
+              ),
+              selectedTextStyle: TextStyle(
+                color: AppColors.white, // Text color for selected day
+                fontWeight: FontWeight.bold,
+              ),
+            ),
             firstDay: DateTime.utc(2020, 1, 1),
             lastDay: DateTime.utc(2100, 12, 31),
             focusedDay: _focusedDay,
@@ -167,6 +204,7 @@ class _CalendarPageState extends State<CalendarPage> {
                 _calendarFormat = format;
               });
             },
+            rowHeight: 60,
             calendarBuilders: CalendarBuilders(
               markerBuilder: (context, date, events) {
                 if (events.isEmpty) return null;
@@ -183,7 +221,7 @@ class _CalendarPageState extends State<CalendarPage> {
                         height: 6,
                         margin: const EdgeInsets.symmetric(horizontal: 1),
                         decoration: const BoxDecoration(
-                          color: Colors.blue,
+                          color: AppColors.lightBlue,
                           shape: BoxShape.circle,
                         ),
                       ),
@@ -193,7 +231,7 @@ class _CalendarPageState extends State<CalendarPage> {
                         height: 6,
                         margin: const EdgeInsets.symmetric(horizontal: 1),
                         decoration: const BoxDecoration(
-                          color: Colors.green,
+                          color: AppColors.yellow,
                           shape: BoxShape.circle,
                         ),
                       ),
@@ -222,8 +260,8 @@ class _CalendarPageState extends State<CalendarPage> {
                           child: Card(
                             color:
                                 event.source == 'google'
-                                    ? Colors.blue[100]
-                                    : Colors.green[100],
+                                    ? AppColors.lightBlue
+                                    : AppColors.yellow,
                             child: ListTile(
                               title: Text(event.title),
                               subtitle: Text('${event.date}'),
@@ -231,7 +269,7 @@ class _CalendarPageState extends State<CalendarPage> {
                                   event.zoomBotEnabled
                                       ? const Icon(
                                         Icons.videocam,
-                                        color: Colors.deepPurple,
+                                        color: AppColors.mainSageGreen,
                                       )
                                       : null,
                             ),

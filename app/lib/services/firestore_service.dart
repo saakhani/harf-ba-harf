@@ -34,7 +34,6 @@ class FirestoreService {
 
   Future<String> createMeetingEntryAutoId({
     required String title,
-    required List<String> tags,
     required String filePath,
   }) async {
     print('FirestoreService: createMeetingEntryAutoId called');
@@ -60,7 +59,7 @@ class FirestoreService {
 
       await docRef.set({
         'title': title,
-        'tags': tags,
+        'tags': "",
         'status': 'uploading',
         'userId': user.uid,
         'fileName': filePath.split('/').last,
@@ -113,11 +112,7 @@ class FirestoreService {
             ),
           );
 
-
-
     final response = await request.send();
-
-
 
     if (response.statusCode == 200) {
       print("✅ Upload successful, backend processing started.");
@@ -147,6 +142,23 @@ class FirestoreService {
       });
     } else {
       final body = await response.stream.bytesToString();
+      // Update Firestore with error status and error message in transcript
+      final docRef = _firestore
+          .collection('users')
+          .doc(user.uid)
+          .collection('meetings')
+          .doc(meetingId);
+      await docRef.update({
+        'status': 'error',
+        'transcript': [
+          {
+            'speaker': 'Error',
+            'timestamp_seconds': 0,
+            'text': 'Upload failed: ${response.statusCode} → $body',
+          },
+        ],
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
       throw Exception('❌ Upload failed: ${response.statusCode} → $body');
     }
   }

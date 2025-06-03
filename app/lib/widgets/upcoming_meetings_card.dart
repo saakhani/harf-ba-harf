@@ -1,54 +1,42 @@
 import 'package:flutter/material.dart';
-
 import 'package:harf_ba_harf/screens/add_new_meeting.dart';
 import 'package:harf_ba_harf/models/meeting_model.dart';
+import 'package:harf_ba_harf/services/app_colors.dart';
+import 'package:harf_ba_harf/services/text_styles.dart';
+import 'package:harf_ba_harf/widgets/duration_formatter.dart';
 
 class UpcomingMeetingCard extends StatelessWidget {
-  final String title;
-  final String time;
-  final String? notes;
-  final String duration;
-  final Color color;
-  final EdgeInsetsGeometry margin;
-  final Meeting meeting; // Pass the Meeting object
+  final Meeting meeting;
+  final int index;
   final VoidCallback? onTap;
 
-  static List<Color> colorOptions = [
-    Colors.blue.shade100,
-    Colors.green.shade100,
-    Colors.orange.shade100,
-    Colors.purple.shade100,
-    Colors.teal.shade100,
+  static const List<Color> colorOptions = [
+    AppColors.peachPink,
+    AppColors.yellow,
+    AppColors.lightBlue,
   ];
 
   const UpcomingMeetingCard({
     super.key,
-    required this.title,
-    required this.time,
-    this.notes,
-    required this.duration,
-    required this.color,
-    this.margin = EdgeInsets.zero,
-    required this.meeting, // Required Meeting object
+    required this.meeting,
+    required this.index,
     this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
+    final color = colorOptions[index % colorOptions.length];
     return GestureDetector(
       onTap: () {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder:
-                (context) => AddMeetingForm(
-                  meeting: meeting, // Pass the meeting to the form
-                ),
+            builder: (context) => AddMeetingForm(meeting: meeting),
           ),
         );
       },
       child: Card(
-        margin: margin,
+        margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 0),
         color: color,
         child: Padding(
           padding: const EdgeInsets.all(16),
@@ -56,31 +44,18 @@ class UpcomingMeetingCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                title,
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
+                meeting.title,
+                style: AppTextStyles.heading3.copyWith(
+                  color: AppColors.blackish,
                 ),
               ),
               const SizedBox(height: 8),
-              Text(time, style: TextStyle(color: Colors.grey.shade700)),
-              const SizedBox(height: 8),
               Text(
-                'Duration: $duration',
-                style: TextStyle(color: Colors.grey.shade700),
-              ),
-              Text(
-                'Status: ${meeting.status}',
-                style: const TextStyle(fontSize: 14, color: Colors.grey),
-              ),
-              if (notes != null) ...[
-                const SizedBox(height: 12),
-                const Text(
-                  "Notes:",
-                  style: TextStyle(fontWeight: FontWeight.w500),
+                'Duration: ${DurationFormatter.format(meeting.duration)}',
+                style: AppTextStyles.body2.copyWith(
+                  color: const Color(0xFF374151),
                 ),
-                Text(notes!),
-              ],
+              ),
             ],
           ),
         ),

@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:harf_ba_harf/providers/upload_progress_provider.dart';
 import 'package:harf_ba_harf/screens/verify_email.dart';
+import 'package:harf_ba_harf/services/app_colors.dart';
+import 'package:harf_ba_harf/services/text_styles.dart';
 import 'package:provider/provider.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import 'firebase_options.dart';
 import 'models/meeting_model.dart';
@@ -27,7 +30,7 @@ void main() async {
   runApp(
     MultiProvider(
       providers: [
-                ChangeNotifierProvider(create: (_) => UploadProgressProvider()),
+        ChangeNotifierProvider(create: (_) => UploadProgressProvider()),
         ChangeNotifierProvider(create: (_) => CustomAuthProvider()),
         ChangeNotifierProvider(create: (_) => UserProvider()),
       ],
@@ -44,7 +47,42 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Harf Ba Harf',
       navigatorKey: navigatorKey,
-      theme: ThemeData(primarySwatch: Colors.blue),
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: AppColors.mainSageGreen, // your main brand color
+        ),
+        brightness: Brightness.light,
+        fontFamily: GoogleFonts.outfit().fontFamily,
+        scaffoldBackgroundColor: Colors.white,
+        appBarTheme: AppBarTheme(
+          backgroundColor: AppColors.white,
+          foregroundColor: AppColors.blackish,
+        ),
+
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppColors.mainSageGreen,
+            foregroundColor: AppColors.white,
+            padding: EdgeInsets.symmetric(vertical: 12, horizontal: 24),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+            textStyle: AppTextStyles.body1
+          ),
+        ),
+        inputDecorationTheme: InputDecorationTheme(
+          border: OutlineInputBorder(),
+          focusedBorder: OutlineInputBorder(
+            borderSide: BorderSide(color: AppColors.mainSageGreen),
+          ),
+        ),
+        cardTheme: CardTheme(
+          elevation: 5,
+          margin: EdgeInsets.all(12),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        ),
+      ),
       home: const AuthGate(),
       routes: {
         '/home': (context) => HomePage(),

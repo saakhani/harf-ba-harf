@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:harf_ba_harf/providers/upload_progress_provider.dart';
+import 'package:harf_ba_harf/services/app_colors.dart';
 import 'package:harf_ba_harf/services/firestore_service.dart';
 import 'package:harf_ba_harf/services/remote_config_service.dart';
+import 'package:harf_ba_harf/services/text_styles.dart';
 import 'package:provider/provider.dart';
 
 class FileTranscriptionPage extends StatefulWidget {
@@ -57,12 +59,7 @@ class _FileTranscriptionPageState extends State<FileTranscriptionPage> {
         print("📄 Creating Firestore meeting document...");
         final meetingId = await firestoreService.createMeetingEntryAutoId(
           title: _title!,
-          tags: _tags,
           filePath: _filePath!,
-        );
-        final uploadProgressProvider = Provider.of<UploadProgressProvider>(
-          context,
-          listen: false,
         );
 
         print("✅ Firestore document created with ID: $meetingId");
@@ -99,46 +96,52 @@ class _FileTranscriptionPageState extends State<FileTranscriptionPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('File Transcription')),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            children: [
-              TextFormField(
-                decoration: const InputDecoration(labelText: 'Title'),
-                validator:
-                    (value) =>
-                        value?.isEmpty ?? true ? 'Title is required' : null,
-                onSaved: (value) => _title = value,
+      appBar: AppBar(),
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start, // <-- left align heading
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(left: 16.0, top: 8.0, bottom: 4.0),
+            child: Text(
+              "Upload File",
+              style: AppTextStyles.pageTitle.copyWith(
+                color: AppColors.blackish,
               ),
-              TextFormField(
-                decoration: const InputDecoration(
-                  labelText: 'Tags (comma-separated)',
-                ),
-                onSaved: (value) {
-                  if (value != null) {
-                    _tags = value.split(',').map((tag) => tag.trim()).toList();
-                  }
-                },
-              ),
-              const SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: _pickFile,
-                child: const Text('Pick Audio File'),
-              ),
-              if (_filePath != null) Text('Selected File: $_filePath'),
-              const SizedBox(height: 16),
-              _isUploading
-                  ? const CircularProgressIndicator()
-                  : ElevatedButton(
-                    onPressed: _uploadFile,
-                    child: const Text('Upload and Transcribe'),
-                  ),
-            ],
+              textAlign: TextAlign.left, // ensure left alignment
+            ),
           ),
-        ),
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                children: [
+                  TextFormField(
+                    decoration: const InputDecoration(labelText: 'Title'),
+                    validator:
+                        (value) =>
+                            value?.isEmpty ?? true ? 'Title is required' : null,
+                    onSaved: (value) => _title = value,
+                  ),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: _pickFile,
+                    child: const Text('Pick Audio File'),
+                  ),
+                    if (_filePath != null)
+                    Text('Selected File: ${_filePath!.split(RegExp(r'[\\/]+')).last}'),
+                  const SizedBox(height: 16),
+                  _isUploading
+                      ? const CircularProgressIndicator()
+                      : ElevatedButton(
+                        onPressed: _uploadFile,
+                        child: const Text('Upload and Transcribe'),
+                      ),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -1,6 +1,8 @@
 // lib/screens/history.dart
 import 'package:flutter/material.dart';
 import 'package:harf_ba_harf/models/meeting_model.dart';
+import 'package:harf_ba_harf/services/app_colors.dart';
+import 'package:harf_ba_harf/services/text_styles.dart';
 import 'package:harf_ba_harf/widgets/past_meeting_card.dart';
 import 'package:harf_ba_harf/widgets/navbar.dart';
 
@@ -15,10 +17,20 @@ class _HistoryPageState extends State<HistoryPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('History')),
+      appBar: AppBar(automaticallyImplyLeading: false),
       body: Column(
+        crossAxisAlignment: CrossAxisAlignment.start, // <-- left align heading
         children: [
-          const Divider(height: 1),
+          Padding(
+            padding: const EdgeInsets.only(left: 16.0, top: 8.0, bottom: 4.0),
+            child: Text(
+              "History",
+              style: AppTextStyles.pageTitle.copyWith(
+                color: AppColors.blackish,
+              ),
+              textAlign: TextAlign.left, // ensure left alignment
+            ),
+          ),
           Expanded(
             child: StreamBuilder<List<Meeting>>(
               stream: Meeting.getPastMeetings(),
@@ -38,11 +50,12 @@ class _HistoryPageState extends State<HistoryPage> {
                     final meeting = pastMeetings[index];
                     return PastMeetingCard(
                       meeting: meeting,
-                      onTap: () => Navigator.pushNamed(
-                        context,
-                        '/meeting-detail',
-                        arguments: meeting,
-                      ),
+                      onTap:
+                          () => Navigator.pushNamed(
+                            context,
+                            '/meeting-detail',
+                            arguments: meeting,
+                          ),
                     );
                   },
                 );
