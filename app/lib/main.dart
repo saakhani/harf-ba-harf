@@ -27,16 +27,24 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
-  runApp(
-    MultiProvider(
+  // Ensure theme is ready before app launches
+  runApp(const MyAppWithProviders());
+}
+
+class MyAppWithProviders extends StatelessWidget {
+  const MyAppWithProviders({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => UploadProgressProvider()),
         ChangeNotifierProvider(create: (_) => CustomAuthProvider()),
         ChangeNotifierProvider(create: (_) => UserProvider()),
       ],
       child: const MyApp(),
-    ),
-  );
+    );
+  }
 }
 
 class MyApp extends StatelessWidget {
@@ -68,7 +76,7 @@ class MyApp extends StatelessWidget {
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(10),
             ),
-            textStyle: AppTextStyles.body1
+            textStyle: AppTextStyles.body1,
           ),
         ),
         inputDecorationTheme: InputDecorationTheme(
@@ -146,18 +154,16 @@ class _AuthGateState extends State<AuthGate> {
       return const Scaffold(
         body: Center(
           child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          // Replace with your actual logo asset path
-          SizedBox(
-            height: 100,
-            child: Image(
-          image: AssetImage('assets/icon/app_icon.png'),
-            ),
-          ),
-          SizedBox(height: 24),
-          CircularProgressIndicator(),
-        ],
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // Replace with your actual logo asset path
+              SizedBox(
+                height: 100,
+                child: Image(image: AssetImage('assets/icon/app_icon.png')),
+              ),
+              SizedBox(height: 24),
+              CircularProgressIndicator(),
+            ],
           ),
         ),
       );
