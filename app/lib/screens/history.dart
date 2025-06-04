@@ -41,15 +41,25 @@ class _HistoryPageState extends State<HistoryPage> {
                   return const Center(child: CircularProgressIndicator());
                 }
                 if (snapshot.hasError) {
-                  // print('Error: ${snapshot.error}');
-                  return const Center(child: Text("Error loading meetings"));
+                  return Center(
+                    child: Text("Error loading meetings: ${snapshot.error}"),
+                  );
                 }
                 final pastMeetings = snapshot.data ?? [];
-
+                if (pastMeetings is! List<Meeting>) {
+                  return const Center(
+                    child: Text("Data format error: Meetings list is invalid."),
+                  );
+                }
                 return ListView.builder(
                   itemCount: pastMeetings.length,
                   itemBuilder: (context, index) {
                     final meeting = pastMeetings[index];
+                    if (meeting is! Meeting) {
+                      return const ListTile(
+                        title: Text("Invalid meeting data"),
+                      );
+                    }
                     return PastMeetingCard(
                       meeting: meeting,
                       onTap:

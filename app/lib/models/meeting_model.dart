@@ -28,6 +28,13 @@ class Meeting {
 
   factory Meeting.fromFirestore(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;
+    // Fix tags field to always be a List<String>
+    List<String> tags = [];
+    if (data['tags'] is List) {
+      tags = List<String>.from((data['tags'] as List).map((e) => e.toString()));
+    } else if (data['tags'] is String && (data['tags'] as String).isNotEmpty) {
+      tags = [(data['tags'] as String)];
+    }
     return Meeting(
       id: doc.id,
       title: data['title'] ?? 'Untitled Meeting',
@@ -35,10 +42,7 @@ class Meeting {
           (data['date'] as Timestamp?)?.toDate() ??
           DateTime.fromMillisecondsSinceEpoch(0),
       duration: Duration(seconds: data['duration_seconds'] ?? 0),
-      tags:
-          data['tags'] != null
-              ? List<String>.from(data['tags'] as List)
-              : <String>[],
+      tags: tags,
       transcript:
           data['transcript'] != null
               ? (data['transcript'] as List<dynamic>)

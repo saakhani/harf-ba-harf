@@ -58,16 +58,19 @@ class _LiveTranscriptionPageState extends State<LiveTranscriptionPage> {
       return;
     }
     try {
-      // Create Firestore meeting document
+      print('Creating Firestore meeting document...');
       final firestoreService = FirestoreService();
       final meetingDocId = await firestoreService.createMeetingEntryAutoId(
         title: title,
         filePath: '', // No file for live transcription
       );
+      print('Meeting doc ID: ' + meetingDocId);
       // Get backend URL from Remote Config
       final remoteConfig = await RemoteConfigService.initialize();
       final zoom_url = remoteConfig.zoomBotUrl;
+      print('Zoom bot URL from remote config: ' + zoom_url);
       final url = '$zoom_url/trigger-zoom-bot';
+      print('Full backend URL: ' + url);
       final body = jsonEncode({
         if (zoomLink.isNotEmpty) 'zoom_link': zoomLink,
         if (meetingId.isNotEmpty) 'meeting_id': meetingId,
@@ -76,18 +79,22 @@ class _LiveTranscriptionPageState extends State<LiveTranscriptionPage> {
         'recording_duration': duration,
         'meeting_doc_id': meetingDocId,
       });
+      print('POST body: ' + body);
       final response = await http.post(
         Uri.parse(url),
         body: body,
         headers: {'Content-Type': 'application/json'},
       );
+      print('Response status: ' + response.statusCode.toString());
+      print('Response body: ' + response.body);
       if (response.statusCode == 200) {
         setState(() => _responseMessage = 'Zoom bot triggered successfully!');
         Navigator.of(context).popUntil((route) => route.isFirst);
       } else {
-        setState(() => _responseMessage = 'Error: {response.body}');
+        setState(() => _responseMessage = 'Error:  ${response.body}');
       }
     } catch (e) {
+      print('Exception: $e');
       setState(() => _responseMessage = 'Error: $e');
     } finally {
       setState(() => _isLoading = false);
@@ -99,108 +106,127 @@ class _LiveTranscriptionPageState extends State<LiveTranscriptionPage> {
     return Scaffold(
       drawer: const SidebarDrawer(),
       appBar: AppBar(automaticallyImplyLeading: true),
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.start, // <-- left align heading
-        children: [
-          Padding(
-            padding: const EdgeInsets.only(left: 16.0, top: 8.0, bottom: 4.0),
-            child: Text(
-              "Live Transcription",
-              style: AppTextStyles.pageTitle.copyWith(
-                color: AppColors.blackish,
-              ),
-              textAlign: TextAlign.left, // ensure left alignment
-            ),
-          ),
-          SingleChildScrollView(
-            padding: const EdgeInsets.all(16.0),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Title field first
-                  TextFormField(
-                    controller: _titleController,
-                    decoration: const InputDecoration(labelText: 'Title'),
-                    validator:
-                        (value) =>
-                            value == null || value.isEmpty
-                                ? 'Title is required'
-                                : null,
-                  ),
-                  const SizedBox(height: 20), // Slight gap after title
-                  const Text(
-                    'Trigger ZoomBot to Join Meeting',
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-                  ),
-                  const SizedBox(height: 16),
-                  TextFormField(
-                    controller: _zoomLinkController,
-                    decoration: const InputDecoration(
-                      labelText: 'Zoom Link (optional)',
-                    ),
-                  ),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: TextFormField(
-                          controller: _meetingIdController,
-                          decoration: const InputDecoration(
-                            labelText: 'Meeting ID (optional)',
+      body: SafeArea(
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            return SingleChildScrollView(
+              child: ConstrainedBox(
+                constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                child: IntrinsicHeight(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Form(
+                      key: _formKey,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.only(
+                              left: 0,
+                              top: 0,
+                              bottom: 16.0,
+                            ),
+                            child: Text(
+                              "Live Transcription",
+                              style: AppTextStyles.pageTitle.copyWith(
+                                color: AppColors.blackish,
+                              ),
+                              textAlign: TextAlign.left,
+                            ),
                           ),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: TextFormField(
-                          controller: _passcodeController,
-                          decoration: const InputDecoration(
-                            labelText: 'Passcode (optional)',
+                          // Title field first
+                          TextFormField(
+                            controller: _titleController,
+                            decoration: const InputDecoration(
+                              labelText: 'Title',
+                            ),
+                            validator:
+                                (value) =>
+                                    value == null || value.isEmpty
+                                        ? 'Title is required'
+                                        : null,
                           ),
-                        ),
+                          const SizedBox(height: 20),
+                          const Text(
+                            'Trigger ZoomBot to Join Meeting',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 18,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          TextFormField(
+                            controller: _zoomLinkController,
+                            decoration: const InputDecoration(
+                              labelText: 'Zoom Link (optional)',
+                            ),
+                          ),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: TextFormField(
+                                  controller: _meetingIdController,
+                                  decoration: const InputDecoration(
+                                    labelText: 'Meeting ID (optional)',
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: TextFormField(
+                                  controller: _passcodeController,
+                                  decoration: const InputDecoration(
+                                    labelText: 'Passcode (optional)',
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          TextFormField(
+                            controller: _userNameController,
+                            decoration: const InputDecoration(
+                              labelText: 'Your Full Name',
+                            ),
+                            validator:
+                                (v) =>
+                                    v == null || v.isEmpty ? 'Required' : null,
+                          ),
+                          const SizedBox(height: 8),
+                          TextFormField(
+                            controller: _durationController,
+                            decoration: const InputDecoration(
+                              labelText: 'Recording Duration (seconds)',
+                            ),
+                            keyboardType: TextInputType.number,
+                          ),
+                          const SizedBox(height: 16),
+                          _isLoading
+                              ? const Center(child: CircularProgressIndicator())
+                              : SizedBox(
+                                width: double.infinity,
+                                child: ElevatedButton(
+                                  onPressed: _triggerZoomBot,
+                                  child: const Text('Join Zoom Meeting'),
+                                ),
+                              ),
+                          if (_responseMessage != null) ...[
+                            const SizedBox(height: 16),
+                            Text(
+                              _responseMessage!,
+                              style: TextStyle(color: Colors.blue),
+                            ),
+                          ],
+                          const Spacer(),
+                        ],
                       ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  TextFormField(
-                    controller: _userNameController,
-                    decoration: const InputDecoration(
-                      labelText: 'Your Full Name',
                     ),
-                    validator:
-                        (v) => v == null || v.isEmpty ? 'Required' : null,
                   ),
-                  const SizedBox(height: 8),
-                  TextFormField(
-                    controller: _durationController,
-                    decoration: const InputDecoration(
-                      labelText: 'Recording Duration (seconds)',
-                    ),
-                    keyboardType: TextInputType.number,
-                  ),
-                  const SizedBox(height: 16),
-                  _isLoading
-                      ? const Center(child: CircularProgressIndicator())
-                      : SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          onPressed: _triggerZoomBot,
-                          child: const Text('Join Zoom Meeting'),
-                        ),
-                      ),
-                  if (_responseMessage != null) ...[
-                    const SizedBox(height: 16),
-                    Text(
-                      _responseMessage!,
-                      style: TextStyle(color: Colors.blue),
-                    ),
-                  ],
-                ],
+                ),
               ),
-            ),
-          ),
-        ],
+            );
+          },
+        ),
       ),
       bottomNavigationBar: FloatingNavBar(context: context, currentIndex: 0),
     );

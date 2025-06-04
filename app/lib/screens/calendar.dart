@@ -26,13 +26,32 @@ class _CalendarPageState extends State<CalendarPage> {
   List<Meeting> _customMeetings = [];
   bool _loadingGoogle = false;
   String? _googleError;
+  bool _googleConnected = false;
 
   @override
   void initState() {
     super.initState();
     _selectedDay = _focusedDay;
+    _checkGoogleConnection();
     _fetchGoogleEvents();
     _fetchCustomMeetings();
+  }
+
+  Future<void> _checkGoogleConnection() async {
+    final connected = await _calendarService.isGoogleCalendarConnected();
+    setState(() {
+      _googleConnected = connected;
+    });
+  }
+
+  Future<void> _toggleGoogleIntegration(bool value) async {
+    if (value) {
+      await _calendarService.connectGoogleCalendar();
+    } else {
+      await _calendarService.disconnectGoogleCalendar();
+    }
+    await _checkGoogleConnection();
+    await _fetchGoogleEvents();
   }
 
   Future<void> _fetchGoogleEvents() async {
@@ -140,10 +159,30 @@ class _CalendarPageState extends State<CalendarPage> {
       appBar: AppBar(
         automaticallyImplyLeading: true, // Show the drawer icon
         actions: [
-          IconButton(
-            icon: const Icon(Icons.add),
-            onPressed: _onAddEvent,
-            tooltip: 'Add Event',
+          Row(
+            children: [
+              Switch(
+                value: _googleConnected,
+                onChanged: (val) => _toggleGoogleIntegration(val),
+                activeColor: Colors.green,
+                inactiveThumbColor: Colors.grey,
+              ),
+              Padding(
+                padding: const EdgeInsets.only(right: 8.0),
+                child: Text(
+                  _googleConnected ? 'Google Connected' : 'Google Off',
+                  style: TextStyle(
+                    color: _googleConnected ? Colors.green : Colors.grey,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.add),
+                onPressed: _onAddEvent,
+                tooltip: 'Add Event',
+              ),
+            ],
           ),
         ],
       ),

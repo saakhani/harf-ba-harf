@@ -19,5 +19,5 @@ class RemoteConfigService {
   }
 
   String get ngrokUrl => _remoteConfig.getString('ngrok_url');
-  String get zoomBotUrl => _remoteConfig.getString('zoom_bot_url');
+  String get zoomBotUrl => _remoteConfig.getString('zoom_url');
 }

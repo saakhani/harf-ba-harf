@@ -63,7 +63,7 @@ def trigger_zoom_bot():
         preferred_device = audio_devices[0]
     if not preferred_device:
         return jsonify({'error': 'No audio device found for recording.'}), 500
-    output_path = "~/meeting_audio4.wav"
+    output_path = "C:\\users\\msaad\\meeting_audio4.wav"
     ffmpeg_command = [
         ffmpeg_path,
         '-f', 'dshow',

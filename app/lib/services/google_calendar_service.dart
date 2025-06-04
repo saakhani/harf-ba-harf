@@ -3,14 +3,19 @@ import 'package:googleapis/calendar/v3.dart' as calendar;
 import 'package:http/http.dart' as http;
 
 final GoogleSignIn _googleSignIn = GoogleSignIn(
-  scopes: <String>[
-    calendar.CalendarApi.calendarReadonlyScope,
-  ],
+  scopes: <String>[calendar.CalendarApi.calendarReadonlyScope],
 );
 
 class GoogleCalendarService {
   Future<List<calendar.Event>> fetchUpcomingEvents() async {
-    final account = await _googleSignIn.signIn();
+    // Only sign in if not already signed in
+    GoogleSignInAccount? account = _googleSignIn.currentUser;
+    if (account == null) {
+      account = await _googleSignIn.signInSilently();
+    }
+    if (account == null) {
+      account = await _googleSignIn.signIn();
+    }
     if (account == null) return [];
 
     final authHeaders = await account.authHeaders;
@@ -26,6 +31,18 @@ class GoogleCalendarService {
       orderBy: "startTime",
     );
     return events.items ?? [];
+  }
+
+  Future<bool> isGoogleCalendarConnected() async {
+    return await _googleSignIn.isSignedIn();
+  }
+
+  Future<void> connectGoogleCalendar() async {
+    await _googleSignIn.signIn();
+  }
+
+  Future<void> disconnectGoogleCalendar() async {
+    await _googleSignIn.disconnect();
   }
 }
 
