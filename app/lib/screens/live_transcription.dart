@@ -2,8 +2,10 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:harf_ba_harf/services/app_colors.dart';
+import 'package:harf_ba_harf/services/firestore_service.dart';
 import 'package:harf_ba_harf/services/text_styles.dart';
 import 'package:harf_ba_harf/widgets/navbar.dart';
+import 'package:harf_ba_harf/widgets/sidebar.dart';
 import 'package:http/http.dart' as http;
 
 class LiveTranscriptionPage extends StatefulWidget {
@@ -20,6 +22,7 @@ class _LiveTranscriptionPageState extends State<LiveTranscriptionPage> {
   final _passcodeController = TextEditingController();
   final _userNameController = TextEditingController();
   final _durationController = TextEditingController(text: '3600');
+  final _titleController = TextEditingController();
   bool _isLoading = false;
   String? _responseMessage;
 
@@ -30,6 +33,7 @@ class _LiveTranscriptionPageState extends State<LiveTranscriptionPage> {
     _passcodeController.dispose();
     _userNameController.dispose();
     _durationController.dispose();
+    _titleController.dispose();
     super.dispose();
   }
 
@@ -44,16 +48,32 @@ class _LiveTranscriptionPageState extends State<LiveTranscriptionPage> {
     final passcode = _passcodeController.text.trim();
     final userFullName = _userNameController.text.trim();
     final duration = int.tryParse(_durationController.text.trim()) ?? 3600;
-    final url =
-        'http://192.168.0.104:5000/trigger-zoom-bot'; // TODO: Replace with your ngrok URL
-    final body = jsonEncode({
-      if (zoomLink.isNotEmpty) 'zoom_link': zoomLink,
-      if (meetingId.isNotEmpty) 'meeting_id': meetingId,
-      if (passcode.isNotEmpty) 'passcode': passcode,
-      'user_full_name': userFullName,
-      'recording_duration': duration,
-    });
+    final title = _titleController.text.trim();
+    if (title.isEmpty) {
+      setState(() {
+        _isLoading = false;
+        _responseMessage = 'Title is required.';
+      });
+      return;
+    }
     try {
+      // Create Firestore meeting document
+      final firestoreService = FirestoreService();
+      final meetingDocId = await firestoreService.createMeetingEntryAutoId(
+        title: title,
+        filePath: '', // No file for live transcription
+      );
+      // Call backend to trigger Zoom bot
+      final url =
+          'http://192.168.0.104:5000/trigger-zoom-bot'; // TODO: Replace with your ngrok URL
+      final body = jsonEncode({
+        if (zoomLink.isNotEmpty) 'zoom_link': zoomLink,
+        if (meetingId.isNotEmpty) 'meeting_id': meetingId,
+        if (passcode.isNotEmpty) 'passcode': passcode,
+        'user_full_name': userFullName,
+        'recording_duration': duration,
+        'meeting_doc_id': meetingDocId,
+      });
       final response = await http.post(
         Uri.parse(url),
         body: body,
@@ -61,6 +81,7 @@ class _LiveTranscriptionPageState extends State<LiveTranscriptionPage> {
       );
       if (response.statusCode == 200) {
         setState(() => _responseMessage = 'Zoom bot triggered successfully!');
+        Navigator.of(context).popUntil((route) => route.isFirst);
       } else {
         setState(() => _responseMessage = 'Error: ${response.body}');
       }
@@ -74,7 +95,8 @@ class _LiveTranscriptionPageState extends State<LiveTranscriptionPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(automaticallyImplyLeading: false),
+      drawer: const SidebarDrawer(),
+      appBar: AppBar(automaticallyImplyLeading: true),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start, // <-- left align heading
         children: [
@@ -95,6 +117,17 @@ class _LiveTranscriptionPageState extends State<LiveTranscriptionPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // Title field first
+                  TextFormField(
+                    controller: _titleController,
+                    decoration: const InputDecoration(labelText: 'Title'),
+                    validator:
+                        (value) =>
+                            value == null || value.isEmpty
+                                ? 'Title is required'
+                                : null,
+                  ),
+                  const SizedBox(height: 20), // Slight gap after title
                   const Text(
                     'Trigger ZoomBot to Join Meeting',
                     style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),

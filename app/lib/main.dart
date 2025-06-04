@@ -143,7 +143,24 @@ class _AuthGateState extends State<AuthGate> {
     final isAuth = authProvider.user != null;
 
     if (_isLoading || authProvider.isLoading) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+      return const Scaffold(
+        body: Center(
+          child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          // Replace with your actual logo asset path
+          SizedBox(
+            height: 100,
+            child: Image(
+          image: AssetImage('assets/icon/app_icon.png'),
+            ),
+          ),
+          SizedBox(height: 24),
+          CircularProgressIndicator(),
+        ],
+          ),
+        ),
+      );
     }
 
     if (!isAuth) {

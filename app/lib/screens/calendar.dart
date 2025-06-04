@@ -4,6 +4,7 @@ import 'package:harf_ba_harf/screens/add_new_meeting.dart';
 import 'package:harf_ba_harf/services/app_colors.dart';
 import 'package:harf_ba_harf/services/text_styles.dart';
 import 'package:harf_ba_harf/widgets/navbar.dart';
+import 'package:harf_ba_harf/widgets/sidebar.dart';
 import 'package:table_calendar/table_calendar.dart';
 import '../services/google_calendar_service.dart';
 import 'package:googleapis/calendar/v3.dart' as calendar;
@@ -137,7 +138,7 @@ class _CalendarPageState extends State<CalendarPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        automaticallyImplyLeading: false,
+        automaticallyImplyLeading: true, // Show the drawer icon
         actions: [
           IconButton(
             icon: const Icon(Icons.add),
@@ -146,6 +147,7 @@ class _CalendarPageState extends State<CalendarPage> {
           ),
         ],
       ),
+      drawer: const SidebarDrawer(),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start, // <-- left align heading
         children: [

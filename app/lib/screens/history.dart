@@ -5,6 +5,7 @@ import 'package:harf_ba_harf/services/app_colors.dart';
 import 'package:harf_ba_harf/services/text_styles.dart';
 import 'package:harf_ba_harf/widgets/past_meeting_card.dart';
 import 'package:harf_ba_harf/widgets/navbar.dart';
+import 'package:harf_ba_harf/widgets/sidebar.dart';
 
 class HistoryPage extends StatefulWidget {
   const HistoryPage({super.key});
@@ -17,7 +18,8 @@ class _HistoryPageState extends State<HistoryPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(automaticallyImplyLeading: false),
+      drawer: const SidebarDrawer(),
+      appBar: AppBar(automaticallyImplyLeading: true),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start, // <-- left align heading
         children: [

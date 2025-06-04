@@ -4,6 +4,7 @@ import 'package:harf_ba_harf/screens/signup.dart';
 import 'package:harf_ba_harf/services/auth_service.dart';
 import 'package:provider/provider.dart';
 import 'package:harf_ba_harf/screens/forgot_password.dart';
+import 'package:flutter_signin_button/flutter_signin_button.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -80,11 +81,20 @@ class _LoginPageState extends State<LoginPage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(height: 60),
+              Image.asset(
+                'assets/icon/app_icon.png',
+                height: 80,
+                width: 80,
+              ),
+              const SizedBox(height: 32),
+
               const Text(
                 'Welcome Back!',
                 style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 40),
+              // App Logo
+              const SizedBox(height: 32),
 
               // Email Field
               TextField(
@@ -156,23 +166,18 @@ class _LoginPageState extends State<LoginPage> {
                 child:
                     _isLoading
                         ? const CircularProgressIndicator()
-                        : ElevatedButton(
-                          onPressed: _handleGoogleSignIn,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.white,
-                            foregroundColor: Colors.black,
+                        : SizedBox(
+                          width: 120,
+                          height: 40, // Set a fixed height for the button
+                          child: SignInButton(
+                            elevation: 0,
+                            Buttons.Google,
+                            onPressed: _handleGoogleSignIn,
+                            text: "Google",
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(8),
                               side: BorderSide(color: Colors.grey.shade300),
                             ),
-                          ),
-                          child: const Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(Icons.g_mobiledata, size: 24),
-                              SizedBox(width: 8),
-                              Text("Sign in with Google"),
-                            ],
                           ),
                         ),
               ),

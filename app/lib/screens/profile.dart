@@ -7,6 +7,7 @@ import 'package:harf_ba_harf/widgets/navbar.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:harf_ba_harf/widgets/sidebar.dart';
 
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
@@ -166,7 +167,8 @@ class ProfilePage extends StatelessWidget {
   Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
     return Scaffold(
-      appBar: AppBar(automaticallyImplyLeading: false),
+      drawer: const SidebarDrawer(),
+      appBar: AppBar(automaticallyImplyLeading: true),
       body: Center(
         child: Column(
           crossAxisAlignment:
