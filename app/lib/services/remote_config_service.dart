@@ -8,13 +8,16 @@ class RemoteConfigService {
 
   static Future<RemoteConfigService> initialize() async {
     final remoteConfig = FirebaseRemoteConfig.instance;
-    await remoteConfig.setConfigSettings(RemoteConfigSettings(
-      fetchTimeout: const Duration(seconds: 10),
-      minimumFetchInterval: const Duration(seconds: 1),
-    ));
+    await remoteConfig.setConfigSettings(
+      RemoteConfigSettings(
+        fetchTimeout: const Duration(seconds: 10),
+        minimumFetchInterval: const Duration(seconds: 1),
+      ),
+    );
     await remoteConfig.fetchAndActivate();
     return RemoteConfigService._(remoteConfig);
   }
 
   String get ngrokUrl => _remoteConfig.getString('ngrok_url');
+  String get zoomBotUrl => _remoteConfig.getString('zoom_bot_url');
 }

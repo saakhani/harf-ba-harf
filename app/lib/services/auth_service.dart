@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:flutter/material.dart';
 
 class AuthService {
   final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
@@ -76,9 +77,13 @@ class AuthService {
   }
 
   // Sign out from both Google and Firebase
-  Future<void> signOut() async {
+  Future<void> signOut(BuildContext context) async {
     await _googleSignIn.signOut();
     await _firebaseAuth.signOut();
+    // Clear navigation stack and go to login
+    if (context.mounted) {
+      Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
+    }
   }
 
   // Send password reset email

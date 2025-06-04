@@ -47,20 +47,66 @@ class _MeetingDetailPageState extends State<MeetingDetailPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(),
+      appBar: AppBar(
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.delete, color: Colors.red),
+            tooltip: 'Delete Meeting',
+            onPressed: () async {
+              final confirm = await showDialog<bool>(
+                context: context,
+                builder:
+                    (context) => AlertDialog(
+                      title: const Text('Delete Meeting'),
+                      content: const Text(
+                        'Are you sure you want to delete this meeting? This action cannot be undone.',
+                      ),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.of(context).pop(false),
+                          child: const Text('Cancel'),
+                        ),
+                        TextButton(
+                          onPressed: () => Navigator.of(context).pop(true),
+                          child: const Text(
+                            'Delete',
+                            style: TextStyle(color: Colors.red),
+                          ),
+                        ),
+                      ],
+                    ),
+              );
+              if (confirm == true) {
+                final userId = FirebaseAuth.instance.currentUser!.uid;
+                await FirebaseFirestore.instance
+                    .collection('users')
+                    .doc(userId)
+                    .collection('meetings')
+                    .doc(widget.meeting.id)
+                    .delete();
+                if (mounted) {
+                  Navigator.of(context).pop();
+                }
+              }
+            },
+          ),
+        ],
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-              Text(
-                widget.meeting.title,
-                style: AppTextStyles.pageTitle.copyWith(color: AppColors.blackish),
+            Text(
+              widget.meeting.title,
+              style: AppTextStyles.pageTitle.copyWith(
+                color: AppColors.blackish,
               ),
-              Text(
-                DateFormat('EEEE, d MMMM y').format(widget.meeting.date),
-                style: AppTextStyles.subtext.copyWith(color: AppColors.blackish),
-              ),
+            ),
+            Text(
+              DateFormat('EEEE, d MMMM y').format(widget.meeting.date),
+              style: AppTextStyles.subtext.copyWith(color: AppColors.blackish),
+            ),
             const SizedBox(height: 24),
             _buildDetailRow(
               'Start',

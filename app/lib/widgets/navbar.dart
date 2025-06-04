@@ -34,10 +34,17 @@ class FloatingNavBar extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
               _buildNavItem(Icons.mic, 'Live', 0, () {
-                Navigator.pushNamed(context, '/live-transcription');
+                if (currentIndex != 0) {
+                  Navigator.pushReplacementNamed(
+                    context,
+                    '/live-transcription',
+                  );
+                }
               }),
               _buildNavItem(Icons.history, 'History', 1, () {
-                Navigator.pushNamed(context, '/history');
+                if (currentIndex != 1) {
+                  Navigator.pushReplacementNamed(context, '/history');
+                }
               }),
               _buildNavItem(Icons.home, 'Home', 2, () {
                 if (currentIndex != 2) {
@@ -48,10 +55,14 @@ class FloatingNavBar extends StatelessWidget {
                 }
               }),
               _buildNavItem(Icons.calendar_today, 'Calendar', 3, () {
-                Navigator.pushNamed(context, '/calendar');
+                if (currentIndex != 3) {
+                  Navigator.pushReplacementNamed(context, '/calendar');
+                }
               }),
               _buildNavItem(Icons.person, 'Profile', 4, () {
-                Navigator.pushNamed(context, '/profile');
+                if (currentIndex != 4) {
+                  Navigator.pushReplacementNamed(context, '/profile');
+                }
               }),
             ],
           ),
@@ -73,14 +84,20 @@ class FloatingNavBar extends StatelessWidget {
         children: [
           Icon(
             icon,
-            color: currentIndex == index ? AppColors.mainSageGreen : AppColors.darkGrey,
+            color:
+                currentIndex == index
+                    ? AppColors.mainSageGreen
+                    : AppColors.darkGrey,
             size: 28,
           ),
           const SizedBox(height: 4),
           Text(
             label,
             style: TextStyle(
-              color: currentIndex == index ? AppColors.mainSageGreen : AppColors.darkGrey,
+              color:
+                  currentIndex == index
+                      ? AppColors.mainSageGreen
+                      : AppColors.darkGrey,
               fontSize: 12,
             ),
           ),

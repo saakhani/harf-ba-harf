@@ -57,9 +57,7 @@ class _AddMeetingFormState extends State<AddMeetingForm> {
 
       if (endDateTime.isBefore(startDateTime)) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('End time must be after start time'),
-          ),
+          const SnackBar(content: Text('End time must be after start time')),
         );
         return;
       }
@@ -88,15 +86,16 @@ class _AddMeetingFormState extends State<AddMeetingForm> {
             .collection('meetings')
             .doc(newMeeting.id)
             .update({
-          'title': newMeeting.title,
-          'date': Timestamp.fromDate(newMeeting.date),
-          'duration_seconds': newMeeting.duration.inSeconds,
-          'tags': newMeeting.tags,
-          'transcript': newMeeting.transcript.map((e) => e.toMap()).toList(),
-          'notes': newMeeting.notes,
-          'summary': newMeeting.summary,
-          'status': newMeeting.status,
-        });
+              'title': newMeeting.title,
+              'date': Timestamp.fromDate(newMeeting.date),
+              'duration_seconds': newMeeting.duration.inSeconds,
+              'tags': newMeeting.tags,
+              'transcript':
+                  newMeeting.transcript.map((e) => e.toMap()).toList(),
+              'notes': newMeeting.notes,
+              'summary': newMeeting.summary,
+              'status': newMeeting.status,
+            });
       }
 
       Navigator.pop(context);
@@ -107,7 +106,53 @@ class _AddMeetingFormState extends State<AddMeetingForm> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.meeting == null ? 'Add New Meeting' : 'Edit Meeting'),
+        title: Text(
+          widget.meeting == null ? 'Add New Meeting' : 'Edit Meeting',
+        ),
+        actions: [
+          if (widget.meeting != null)
+            IconButton(
+              icon: const Icon(Icons.delete, color: Colors.red),
+              tooltip: 'Delete Meeting',
+              onPressed: () async {
+                final confirm = await showDialog<bool>(
+                  context: context,
+                  builder:
+                      (context) => AlertDialog(
+                        title: const Text('Delete Meeting'),
+                        content: const Text(
+                          'Are you sure you want to delete this meeting? This action cannot be undone.',
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.of(context).pop(false),
+                            child: const Text('Cancel'),
+                          ),
+                          TextButton(
+                            onPressed: () => Navigator.of(context).pop(true),
+                            child: const Text(
+                              'Delete',
+                              style: TextStyle(color: Colors.red),
+                            ),
+                          ),
+                        ],
+                      ),
+                );
+                if (confirm == true) {
+                  final userId = FirebaseAuth.instance.currentUser!.uid;
+                  await FirebaseFirestore.instance
+                      .collection('users')
+                      .doc(userId)
+                      .collection('meetings')
+                      .doc(widget.meeting!.id)
+                      .delete();
+                  if (mounted) {
+                    Navigator.of(context).pop();
+                  }
+                }
+              },
+            ),
+        ],
       ),
       body: SingleChildScrollView(
         child: Padding(
@@ -165,7 +210,8 @@ class _AddMeetingFormState extends State<AddMeetingForm> {
                   onTap: () async {
                     final pickedTime = await showTimePicker(
                       context: context,
-                      initialTime: _startTime ?? const TimeOfDay(hour: 9, minute: 0),
+                      initialTime:
+                          _startTime ?? const TimeOfDay(hour: 9, minute: 0),
                     );
                     if (pickedTime != null) {
                       setState(() {
@@ -185,7 +231,8 @@ class _AddMeetingFormState extends State<AddMeetingForm> {
                   onTap: () async {
                     final pickedTime = await showTimePicker(
                       context: context,
-                      initialTime: _endTime ?? const TimeOfDay(hour: 10, minute: 0),
+                      initialTime:
+                          _endTime ?? const TimeOfDay(hour: 10, minute: 0),
                     );
                     if (pickedTime != null) {
                       setState(() {
@@ -197,7 +244,9 @@ class _AddMeetingFormState extends State<AddMeetingForm> {
                 const SizedBox(height: 24),
                 ElevatedButton(
                   onPressed: _saveMeeting,
-                  child: Text(widget.meeting == null ? 'Save Meeting' : 'Update Meeting'),
+                  child: Text(
+                    widget.meeting == null ? 'Save Meeting' : 'Update Meeting',
+                  ),
                 ),
               ],
             ),

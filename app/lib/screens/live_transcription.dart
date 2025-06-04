@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:harf_ba_harf/services/app_colors.dart';
 import 'package:harf_ba_harf/services/firestore_service.dart';
+import 'package:harf_ba_harf/services/remote_config_service.dart';
 import 'package:harf_ba_harf/services/text_styles.dart';
 import 'package:harf_ba_harf/widgets/navbar.dart';
 import 'package:harf_ba_harf/widgets/sidebar.dart';
@@ -63,9 +64,10 @@ class _LiveTranscriptionPageState extends State<LiveTranscriptionPage> {
         title: title,
         filePath: '', // No file for live transcription
       );
-      // Call backend to trigger Zoom bot
-      final url =
-          'http://192.168.0.104:5000/trigger-zoom-bot'; // TODO: Replace with your ngrok URL
+      // Get backend URL from Remote Config
+      final remoteConfig = await RemoteConfigService.initialize();
+      final zoom_url = remoteConfig.zoomBotUrl;
+      final url = '$zoom_url/trigger-zoom-bot';
       final body = jsonEncode({
         if (zoomLink.isNotEmpty) 'zoom_link': zoomLink,
         if (meetingId.isNotEmpty) 'meeting_id': meetingId,
@@ -83,7 +85,7 @@ class _LiveTranscriptionPageState extends State<LiveTranscriptionPage> {
         setState(() => _responseMessage = 'Zoom bot triggered successfully!');
         Navigator.of(context).popUntil((route) => route.isFirst);
       } else {
-        setState(() => _responseMessage = 'Error: ${response.body}');
+        setState(() => _responseMessage = 'Error: {response.body}');
       }
     } catch (e) {
       setState(() => _responseMessage = 'Error: $e');
