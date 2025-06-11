@@ -8,6 +8,8 @@ import 'package:harf_ba_harf/widgets/transcript_entry.dart';
 import 'package:intl/intl.dart';
 import '../models/meeting_model.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:provider/provider.dart';
+import '../providers/upload_progress_provider.dart';
 
 class MeetingDetailPage extends StatefulWidget {
   final Meeting meeting;
@@ -46,6 +48,8 @@ class _MeetingDetailPageState extends State<MeetingDetailPage> {
 
   @override
   Widget build(BuildContext context) {
+    final progressProvider = Provider.of<UploadProgressProvider>(context);
+    final progress = progressProvider.getProgress(widget.meeting.id);
     return Scaffold(
       appBar: AppBar(
         actions: [
@@ -120,49 +124,92 @@ class _MeetingDetailPageState extends State<MeetingDetailPage> {
             const SizedBox(height: 16),
             _buildDetailRow('Status', widget.meeting.status),
             const Divider(height: 40),
-            ..._transcript.asMap().entries.map(
-              (entry) => TranscriptEntryWidget(
-                entry: entry.value,
-                isEditable: true,
-                rightAlignIfUrdu: true,
-                onEdit: (newText, newSpeaker) async {
-                  // If speaker changed, update all entries with old speaker
-                  if (newSpeaker != entry.value.speaker) {
-                    final oldSpeaker = entry.value.speaker;
-                    setState(() {
-                      for (int i = 0; i < _transcript.length; i++) {
-                        if (_transcript[i].speaker == oldSpeaker) {
-                          _transcript[i] = TranscriptEntry(
-                            speaker: newSpeaker,
-                            timestamp: _transcript[i].timestamp,
-                            text:
-                                i == entry.key ? newText : _transcript[i].text,
-                          );
-                        }
-                      }
-                    });
-                  } else {
-                    setState(() {
-                      _transcript[entry.key] = TranscriptEntry(
-                        speaker: newSpeaker,
-                        timestamp: _transcript[entry.key].timestamp,
-                        text: newText,
-                      );
-                    });
-                  }
-                  final userId = FirebaseAuth.instance.currentUser!.uid;
-                  await FirebaseFirestore.instance
-                      .collection('users')
-                      .doc(userId)
-                      .collection('meetings')
-                      .doc(widget.meeting.id)
-                      .update({
-                        'transcript':
-                            _transcript.map((e) => e.toMap()).toList(),
-                      });
-                },
+            if (widget.meeting.status == 'error') ...[
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(16),
+                margin: const EdgeInsets.only(bottom: 16),
+                decoration: BoxDecoration(
+                  color: Colors.red[50],
+                  border: Border.all(color: Colors.red),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  widget.meeting.transcript.isNotEmpty
+                      ? widget.meeting.transcript[0].text
+                      : 'An error occurred during transcription.',
+                  style: const TextStyle(
+                    color: Colors.red,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  textAlign: TextAlign.left,
+                ),
               ),
-            ),
+            ] else if (widget.meeting.status == 'uploading' &&
+                progress != null) ...[
+              Padding(
+                padding: const EdgeInsets.only(bottom: 16.0),
+                child: LinearProgressIndicator(
+                  value: progress.clamp(0.0, 1.0),
+                  minHeight: 8,
+                  backgroundColor: Colors.grey[300],
+                  color: AppColors.mainSageGreen,
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 16.0),
+                child: Text(
+                  'Uploading: ${(progress * 100).toStringAsFixed(0)}%',
+                  style: AppTextStyles.body2,
+                ),
+              ),
+            ] else ...[
+              ..._transcript.asMap().entries.map(
+                (entry) => TranscriptEntryWidget(
+                  entry: entry.value,
+                  isEditable: true,
+                  rightAlignIfUrdu: true,
+                  onEdit: (newText, newSpeaker) async {
+                    // If speaker changed, update all entries with old speaker
+                    if (newSpeaker != entry.value.speaker) {
+                      final oldSpeaker = entry.value.speaker;
+                      setState(() {
+                        for (int i = 0; i < _transcript.length; i++) {
+                          if (_transcript[i].speaker == oldSpeaker) {
+                            _transcript[i] = TranscriptEntry(
+                              speaker: newSpeaker,
+                              timestamp: _transcript[i].timestamp,
+                              text:
+                                  i == entry.key
+                                      ? newText
+                                      : _transcript[i].text,
+                            );
+                          }
+                        }
+                      });
+                    } else {
+                      setState(() {
+                        _transcript[entry.key] = TranscriptEntry(
+                          speaker: newSpeaker,
+                          timestamp: _transcript[entry.key].timestamp,
+                          text: newText,
+                        );
+                      });
+                    }
+                    final userId = FirebaseAuth.instance.currentUser!.uid;
+                    await FirebaseFirestore.instance
+                        .collection('users')
+                        .doc(userId)
+                        .collection('meetings')
+                        .doc(widget.meeting.id)
+                        .update({
+                          'transcript':
+                              _transcript.map((e) => e.toMap()).toList(),
+                        });
+                  },
+                ),
+              ),
+            ],
           ],
         ),
       ),

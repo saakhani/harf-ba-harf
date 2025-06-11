@@ -1,34 +1,6 @@
-# ---------------------- Installations ----------------------
 !pip install pyngrok pyannote.audio pydub fastapi uvicorn python-multipart --quiet
 !pip install google-cloud-firestore --quiet
 
-# ------------------ Imports ------------------
-import nest_asyncio
-from pyngrok import ngrok
-from fastapi import FastAPI, UploadFile, File, Form
-from fastapi.responses import JSONResponse, HTMLResponse
-from datetime import datetime
-import tempfile, os, torch, torchaudio, gc, json
-from pydub import AudioSegment
-from typing import List
-from pyannote.audio import Pipeline as DiarizationPipeline
-from transformers import pipeline, AutoProcessor, AutoModelForSpeechSeq2Seq, MBart50Tokenizer, MBartForConditionalGeneration
-import threading
-import time
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import RedirectResponse
-import firebase_admin
-from firebase_admin import credentials, firestore
-
-# ------------------ Setup ------------------
-device = "cuda" if torch.cuda.is_available() else "cpu"
-torch_dtype = torch.float16 if torch.cuda.is_available() else torch.float32
-print(device)
-print(torch_dtype)
-
-# ---------------------- Secrets----------------------
-NGROK_AUTHTOKEN = "2wVJam0DHTNJ4tCdn6KruZSSVJh_4c7p2JxGgF1gmyhX2mMLP"
-hf_token = "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"
 service_account_key ={
   "type": "service_account",
   "project_id": "fyp-harfbaharf",
@@ -44,11 +16,41 @@ service_account_key ={
 }
 
 
-# ------------------ Initialize ------------------
+
+import firebase_admin
+from firebase_admin import credentials, firestore
+
 cred = credentials.Certificate(service_account_key)
 firebase_admin.initialize_app(cred)
 db = firestore.client()
 
+import nest_asyncio
+from pyngrok import ngrok
+from fastapi import FastAPI, UploadFile, File, Form
+from fastapi.responses import JSONResponse, HTMLResponse
+from datetime import datetime
+import tempfile, os, torch, torchaudio, gc, json
+from pydub import AudioSegment
+from typing import List
+from pyannote.audio import Pipeline as DiarizationPipeline
+from transformers import pipeline, AutoProcessor, AutoModelForSpeechSeq2Seq, MBart50Tokenizer, MBartForConditionalGeneration
+import threading
+import time
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import RedirectResponse
+import traceback
+# ------------------ Setup ------------------
+device = "cuda" if torch.cuda.is_available() else "cpu"
+torch_dtype = torch.float16 if torch.cuda.is_available() else torch.float32
+print(device)
+print(torch_dtype)
+
+
+NGROK_AUTHTOKEN = "2wVJam0DHTNJ4tCdn6KruZSSVJh_4c7p2JxGgF1gmyhX2mMLP"
+hf_token = "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"
+cached_transcript = []
+
+# ------------------ Load Models ------------------
 app = FastAPI()
 
 app.add_middleware(
@@ -58,8 +60,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-cached_transcript = []
 
 
 diar_pipeline = DiarizationPipeline.from_pretrained("pyannote/speaker-diarization-3.1", use_auth_token=hf_token).to(torch.device(device))
@@ -88,6 +88,20 @@ generate_kwargs = {
 def ensure_format(audio_path, original_filename):
     ext = os.path.splitext(original_filename)[1].lower()
     audio = AudioSegment.from_file(audio_path)
+
+    # Fix: pad raw data to whole number of frames
+    frame_size = audio.frame_width
+    raw_data = audio.raw_data
+    remainder = len(raw_data) % frame_size
+    if remainder != 0:
+        print(f"Padding audio: {remainder} bytes to align frames")
+        raw_data += b'\0' * (frame_size - remainder)
+        audio = AudioSegment(
+            data=raw_data,
+            sample_width=audio.sample_width,
+            frame_rate=audio.frame_rate,
+            channels=audio.channels
+        )
 
     # Only allow .wav, .mp3, .m4a
     if ext not in [".wav", ".mp3", ".m4a"] or audio.frame_rate != 16000 or audio.channels != 1:
@@ -243,6 +257,7 @@ async def diarize_transcribe(
 
         for segment, _, speaker in segments:
             start_ms, end_ms = int(segment.start * 1000), int(segment.end * 1000)
+            print(f"Segment: {segment}, Speaker: {speaker}, Start(ms): {start_ms}, End(ms): {end_ms}")
             if prev_speaker is None:
                 start_time, current_audio = segment.start, full_audio[start_ms:end_ms]
                 prev_speaker = speaker
@@ -251,7 +266,13 @@ async def diarize_transcribe(
             else:
                 with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as tmp:
                     current_audio.export(tmp.name, format="wav")
-                    audio_data, _ = torchaudio.load(tmp.name)
+                    print(f"Exported temp file for speaker {prev_speaker}: {tmp.name}")
+                    try:
+                        audio_data, _ = torchaudio.load(tmp.name)
+                        print(f"Loaded audio data shape: {audio_data.shape}")
+                    except Exception as audio_err:
+                        print(f"Error loading audio with torchaudio: {audio_err}")
+                        raise
                     batched_audio.append(audio_data[0].numpy())
                     batched_speakers.append(prev_speaker)
                     batched_times.append(int(start_time))
@@ -263,12 +284,19 @@ async def diarize_transcribe(
         if current_audio:
             with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as tmp:
                 current_audio.export(tmp.name, format="wav")
-                audio_data, _ = torchaudio.load(tmp.name)
+                print(f"Exported final temp file for speaker {prev_speaker}: {tmp.name}")
+                try:
+                    audio_data, _ = torchaudio.load(tmp.name)
+                    print(f"Loaded audio data shape: {audio_data.shape}")
+                except Exception as audio_err:
+                    print(f"Error loading audio with torchaudio: {audio_err}")
+                    raise
                 batched_audio.append(audio_data[0].numpy())
                 batched_speakers.append(prev_speaker)
                 batched_times.append(int(start_time))
                 temp_files.append(tmp.name)
 
+        print(f"Total batched_audio segments: {len(batched_audio)}")
         results = pipe(batched_audio, generate_kwargs=generate_kwargs)
 
         for speaker, ts, res in zip(batched_speakers, batched_times, results):
@@ -278,12 +306,15 @@ async def diarize_transcribe(
                 "text": clean_repetitions(res["text"].strip())
             })
 
-        for f in temp_files:
-            os.remove(f)
-        gc.collect()
-        torch.cuda.empty_cache()
-
         duration_seconds = int(len(full_audio) / 1000)# Duration in seconds
+
+        full_text = "\n".join([t["text"] for t in cached_transcript])
+        inputs = summarizer_tokenizer(full_text, return_tensors="pt", max_length=1024, truncation=True)
+        inputs = {k: v.to(device) for k, v in inputs.items()}
+        summary_ids = summarizer_model.generate(inputs["input_ids"], max_length=500, min_length=100, num_beams=4)
+        summary = summarizer_tokenizer.decode(summary_ids[0], skip_special_tokens=True)
+
+
 
 # ✅ Write result to Firebase
         try:
@@ -292,11 +323,17 @@ async def diarize_transcribe(
               "status": "completed",
               "duration_seconds": duration_seconds,
               "transcript": cached_transcript,
-              "updatedAt": firestore.SERVER_TIMESTAMP
+              "updatedAt": firestore.SERVER_TIMESTAMP,
+              "summary": summary
           })
         except Exception as firebase_error:
           print(f"⚠️ Firebase update error: {firebase_error}")
 
+
+        for f in temp_files:
+            os.remove(f)
+        gc.collect()
+        torch.cuda.empty_cache()
 
          # Return response with additional metadata
         return {
@@ -306,25 +343,11 @@ async def diarize_transcribe(
         }
 
       except Exception as e:
+        print("Exception occurred in /diarize_transcribe:")
+        traceback.print_exc()
         return JSONResponse(status_code=500, content={"error": str(e)})
 
 
-@app.post("/summarize")
-def summarize():
-    try:
-        if not cached_transcript:
-            return JSONResponse(status_code=400, content={"error": "No transcript available"})
-
-        full_text = "\n".join([t["text"] for t in cached_transcript])
-        inputs = summarizer_tokenizer(full_text, return_tensors="pt", max_length=1024, truncation=True)
-        inputs = {k: v.to(device) for k, v in inputs.items()}
-        summary_ids = summarizer_model.generate(inputs["input_ids"], max_length=500, min_length=100, num_beams=4)
-        summary = summarizer_tokenizer.decode(summary_ids[0], skip_special_tokens=True)
-
-        return {"summary": summary}
-
-    except Exception as e:
-        return JSONResponse(status_code=500, content={"error": str(e)})
 
 # ------------------ Run FastAPI with ngrok ------------------
 
@@ -341,7 +364,7 @@ def run_api():
 nest_asyncio.apply()
 threading.Thread(target=run_api).start()
 
-
+# import time
 # # Keep cell alive to show logs
-# while True:
-#     time.sleep(1)
+while True:
+    time.sleep(1)

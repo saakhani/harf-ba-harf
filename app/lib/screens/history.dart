@@ -6,6 +6,8 @@ import 'package:harf_ba_harf/services/text_styles.dart';
 import 'package:harf_ba_harf/widgets/past_meeting_card.dart';
 import 'package:harf_ba_harf/widgets/navbar.dart';
 import 'package:harf_ba_harf/widgets/sidebar.dart';
+import 'package:provider/provider.dart';
+import 'package:harf_ba_harf/providers/upload_progress_provider.dart';
 
 class HistoryPage extends StatefulWidget {
   const HistoryPage({super.key});
@@ -55,19 +57,22 @@ class _HistoryPageState extends State<HistoryPage> {
                   itemCount: pastMeetings.length,
                   itemBuilder: (context, index) {
                     final meeting = pastMeetings[index];
-                    if (meeting is! Meeting) {
-                      return const ListTile(
-                        title: Text("Invalid meeting data"),
-                      );
-                    }
-                    return PastMeetingCard(
-                      meeting: meeting,
-                      onTap:
-                          () => Navigator.pushNamed(
-                            context,
-                            '/meeting-detail',
-                            arguments: meeting,
-                          ),
+                    return Consumer<UploadProgressProvider>(
+                      builder: (context, progressProvider, child) {
+                        final progress = progressProvider.getProgress(
+                          meeting.id,
+                        );
+                        return PastMeetingCard(
+                          meeting: meeting,
+                          onTap:
+                              () => Navigator.pushNamed(
+                                context,
+                                '/meeting-detail',
+                                arguments: meeting,
+                              ),
+                          uploadProgress: progress,
+                        );
+                      },
                     );
                   },
                 );

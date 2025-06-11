@@ -44,6 +44,11 @@ class GoogleCalendarService {
   Future<void> disconnectGoogleCalendar() async {
     await _googleSignIn.disconnect();
   }
+
+  /// Static method to clear Google Calendar credentials globally
+  static Future<void> clearGoogleCalendarCredentials() async {
+    await _googleSignIn.disconnect();
+  }
 }
 
 class GoogleAuthClient extends http.BaseClient {

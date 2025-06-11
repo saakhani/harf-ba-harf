@@ -11,7 +11,7 @@ class UploadProgressProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  void clearProgress(String meetingId) {
+  void removeProgress(String meetingId) {
     _progressMap.remove(meetingId);
     notifyListeners();
   }

@@ -55,20 +55,24 @@ class _CalendarPageState extends State<CalendarPage> {
   }
 
   Future<void> _fetchGoogleEvents() async {
+    if (!mounted) return;
     setState(() {
       _loadingGoogle = true;
       _googleError = null;
     });
     try {
       final events = await _calendarService.fetchUpcomingEvents();
+      if (!mounted) return;
       setState(() {
         _googleEvents = events;
       });
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         _googleError = e.toString();
       });
     } finally {
+      if (!mounted) return;
       setState(() {
         _loadingGoogle = false;
       });
@@ -77,6 +81,7 @@ class _CalendarPageState extends State<CalendarPage> {
 
   void _fetchCustomMeetings() {
     Meeting.getUpcomingMeetings().listen((meetings) {
+      if (!mounted) return;
       setState(() {
         _customMeetings = meetings;
       });
@@ -151,6 +156,44 @@ class _CalendarPageState extends State<CalendarPage> {
             ),
       );
     }
+  }
+
+  String _monthName(int month) {
+    const months = [
+      '',
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
+    return months[month];
+  }
+
+  String _formatDuration(Duration duration) {
+    final hours = duration.inHours;
+    final minutes = duration.inMinutes.remainder(60);
+    if (hours > 0) {
+      return '${hours}h ${minutes}m';
+    } else {
+      return '${minutes}m';
+    }
+  }
+
+  // Add this method to clear Google Calendar credentials
+  Future<void> clearGoogleCalendarCredentials() async {
+    await _calendarService.disconnectGoogleCalendar();
+    setState(() {
+      _googleConnected = false;
+      _googleEvents = [];
+    });
   }
 
   @override
@@ -305,7 +348,22 @@ class _CalendarPageState extends State<CalendarPage> {
                                     : AppColors.yellow,
                             child: ListTile(
                               title: Text(event.title),
-                              subtitle: Text('${event.date}'),
+                              subtitle: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    // Date and time in AM/PM
+                                    '${event.date.day.toString().padLeft(2, '0')} ${_monthName(event.date.month)} ${event.date.year}  •  '
+                                    '${(event.date.hour % 12 == 0 ? 12 : event.date.hour % 12).toString().padLeft(2, '0')}:${event.date.minute.toString().padLeft(2, '0')} '
+                                    '${event.date.hour >= 12 ? 'PM' : 'AM'}',
+                                  ),
+                                  Text(
+                                    'Duration: ${_formatDuration(event.duration)}',
+                                    style:
+                                        Theme.of(context).textTheme.bodySmall,
+                                  ),
+                                ],
+                              ),
                               trailing:
                                   event.zoomBotEnabled
                                       ? const Icon(

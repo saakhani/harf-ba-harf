@@ -5,6 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:harf_ba_harf/models/meeting_model.dart';
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
+import 'package:dio/dio.dart';
 
 class FirestoreService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -35,6 +36,7 @@ class FirestoreService {
   Future<String> createMeetingEntryAutoId({
     required String title,
     required String filePath,
+    String status = 'uploading', // Default to 'uploading', but allow override
   }) async {
     print('FirestoreService: createMeetingEntryAutoId called');
     final user = _auth.currentUser;
@@ -52,7 +54,7 @@ class FirestoreService {
               .collection('meetings')
               .doc();
 
-      print('FirestoreService: Creating meeting doc with id ${docRef.id}');
+      print('FirestoreService: Creating meeting doc with id [0m${docRef.id}');
       final now = DateTime.now().subtract(
         const Duration(seconds: 1),
       ); // ⬅️ force into past
@@ -60,7 +62,7 @@ class FirestoreService {
       await docRef.set({
         'title': title,
         'tags': "",
-        'status': 'uploading',
+        'status': status, // Use the provided status
         'userId': user.uid,
         'fileName': filePath.split('/').last,
         'createdAt': FieldValue.serverTimestamp(),
@@ -160,6 +162,142 @@ class FirestoreService {
         'updatedAt': FieldValue.serverTimestamp(),
       });
       throw Exception('❌ Upload failed: ${response.statusCode} → $body');
+    }
+  }
+
+  /// Upload audio file to FastAPI with progress callback
+  Future<void> uploadAndTranscribeWithProgress({
+    required String filePath,
+    required String meetingId,
+    required String backendUrl,
+    required void Function(double) onProgress,
+  }) async {
+    final user = _auth.currentUser;
+    if (user == null) {
+      throw Exception('User not logged in.');
+    }
+    final uri =
+        backendUrl.endsWith('/')
+            ? '${backendUrl}diarize_transcribe'
+            : '$backendUrl/diarize_transcribe';
+    final extension = filePath.split('.').last.toLowerCase();
+    String mimeType = 'audio/wav';
+    if (extension == 'm4a') mimeType = 'audio/x-m4a';
+    if (extension == 'mp3') mimeType = 'audio/mpeg';
+    if (extension == 'aac') mimeType = 'audio/aac';
+    final dio = Dio();
+    final formData = FormData.fromMap({
+      'user_id': user.uid,
+      'meeting_id': meetingId,
+      'audio': await MultipartFile.fromFile(
+        filePath,
+        filename: filePath.split('/').last,
+        contentType: MediaType.parse(mimeType),
+      ),
+    });
+    try {
+      final response = await dio.post(
+        uri,
+        data: formData,
+        onSendProgress: (sent, total) {
+          if (total > 0) onProgress(sent / total);
+        },
+        options: Options(
+          headers: {'Content-Type': 'multipart/form-data'},
+          sendTimeout: const Duration(
+            minutes: 10,
+          ), // Increased from 2 to 10 minutes
+          receiveTimeout: const Duration(
+            minutes: 10,
+          ), // Increased from 2 to 10 minutes
+        ),
+      );
+      if (response.statusCode == 200) {
+        // Always set status to 'processing' after upload
+        final docRef = _firestore
+            .collection('users')
+            .doc(user.uid)
+            .collection('meetings')
+            .doc(meetingId);
+        await docRef.update({
+          'status': 'processing',
+          'uploadCompletedAt': FieldValue.serverTimestamp(),
+        });
+      } else {
+        await setMeetingError(
+          meetingId: meetingId,
+          errorMessage:
+              'Upload failed: ${response.statusCode} → ${response.data}',
+        );
+        throw Exception(
+          '❌ Upload failed: ${response.statusCode} → ${response.data}',
+        );
+      }
+    } catch (e) {
+      await setMeetingError(
+        meetingId: meetingId,
+        errorMessage: 'Exception: $e',
+      );
+      rethrow;
+    }
+  }
+
+  /// Set meeting status to 'error' and store error message in transcript
+  Future<void> setMeetingError({
+    required String meetingId,
+    required String errorMessage,
+  }) async {
+    final user = _auth.currentUser;
+    if (user == null) throw Exception('User not logged in.');
+    final docRef = _firestore
+        .collection('users')
+        .doc(user.uid)
+        .collection('meetings')
+        .doc(meetingId);
+    await docRef.update({
+      'status': 'error',
+      'transcript': [
+        {'speaker': 'Error', 'timestamp_seconds': 0, 'text': errorMessage},
+      ],
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+  }
+
+  /// Set meeting status to 'processing' and store uploadCompletedAt
+  Future<void> setMeetingProcessing({required String meetingId}) async {
+    final user = _auth.currentUser;
+    if (user == null) throw Exception('User not logged in.');
+    final docRef = _firestore
+        .collection('users')
+        .doc(user.uid)
+        .collection('meetings')
+        .doc(meetingId);
+    final doc = await docRef.get();
+    final currentStatus = doc.data()?['status'];
+    if (currentStatus == 'uploading') {
+      await docRef.update({
+        'status': 'processing',
+        'uploadCompletedAt': FieldValue.serverTimestamp(),
+      });
+    }
+  }
+
+  /// Set meeting status to 'completed' and store uploadCompletedAt
+  Future<void> setMeetingCompleted({required String meetingId}) async {
+    final user = _auth.currentUser;
+    if (user == null) throw Exception('User not logged in.');
+    final docRef = _firestore
+        .collection('users')
+        .doc(user.uid)
+        .collection('meetings')
+        .doc(meetingId);
+    final doc = await docRef.get();
+    final currentStatus = doc.data()?['status'];
+    if (currentStatus == 'processing') {
+      await docRef.update({
+        'status': 'completed',
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
     }
   }
 }

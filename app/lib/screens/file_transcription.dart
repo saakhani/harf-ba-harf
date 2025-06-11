@@ -20,6 +20,7 @@ class _FileTranscriptionPageState extends State<FileTranscriptionPage> {
   List<String> _tags = [];
   String? _filePath;
   bool _isUploading = false;
+  double _uploadProgress = 0.0;
 
   Future<void> _pickFile() async {
     final result = await FilePicker.platform.pickFiles(type: FileType.audio);
@@ -46,42 +47,76 @@ class _FileTranscriptionPageState extends State<FileTranscriptionPage> {
 
       setState(() {
         _isUploading = true;
+        _uploadProgress = 0.0;
       });
 
+      String? meetingId;
+      FirestoreService? firestoreService;
       try {
         print("🚀 Initializing remote config...");
         final remoteConfig = await RemoteConfigService.initialize();
         final ngrokUrl = remoteConfig.ngrokUrl;
         print("🌐 FastAPI URL: $ngrokUrl");
 
-        final firestoreService = FirestoreService();
+        firestoreService = FirestoreService();
 
         print("📄 Creating Firestore meeting document...");
-        final meetingId = await firestoreService.createMeetingEntryAutoId(
+        meetingId = await firestoreService.createMeetingEntryAutoId(
           title: _title!,
           filePath: _filePath!,
         );
 
         print("✅ Firestore document created with ID: $meetingId");
 
-        print("📤 Uploading file to FastAPI...");
+        // Immediately return to home screen before uploading/transcribing
+        Navigator.of(context).popUntil((route) => route.isFirst);
+
+        // Start upload and transcription in the background with progress
+        final progressProvider = Provider.of<UploadProgressProvider>(
+          context,
+          listen: false,
+        );
         firestoreService
-            .uploadAndTranscribe(
+            .uploadAndTranscribeWithProgress(
               filePath: _filePath!,
               meetingId: meetingId,
               backendUrl: ngrokUrl,
+              onProgress: (progress) async {
+                // Only update the provider, never call setState here
+                progressProvider.setProgress(meetingId!, progress);
+                if (progress >= 1.0) {
+                  // Set status to processing when upload is complete
+                  await firestoreService?.setMeetingProcessing(
+                    meetingId: meetingId,
+                  );
+                }
+              },
             )
-            .then((_) => print("🧠 Backend transcription triggered."))
-            .catchError((e) => print("❌ FastAPI error: $e"));
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('File uploaded! Processing started.')),
-        );
-
-        print("🔙 Returning to home screen...");
-        Navigator.of(context).popUntil((route) => route.isFirst);
+            .then((_) async {
+              print("🧠 Backend transcription triggered.");
+              progressProvider.removeProgress(meetingId!);
+              // Try to set status to completed if processing is done
+              await firestoreService?.setMeetingCompleted(meetingId: meetingId);
+            })
+            .catchError((e) async {
+              print("❌ FastAPI error: $e");
+              if (firestoreService != null && meetingId != null) {
+                await firestoreService.setMeetingError(
+                  meetingId: meetingId,
+                  errorMessage: 'Exception: $e',
+                );
+              }
+              progressProvider.removeProgress(meetingId!);
+            });
       } catch (e) {
         print("❌ Exception during upload: $e");
+        if (firestoreService != null && meetingId != null) {
+          await firestoreService.setMeetingError(
+            meetingId: meetingId,
+            errorMessage: 'Exception: $e',
+          );
+        }
+        // Only show error if it happens before navigation
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text('Error: $e')));
@@ -128,11 +163,23 @@ class _FileTranscriptionPageState extends State<FileTranscriptionPage> {
                     onPressed: _pickFile,
                     child: const Text('Pick Audio File'),
                   ),
-                    if (_filePath != null)
-                    Text('Selected File: ${_filePath!.split(RegExp(r'[\\/]+')).last}'),
+                  if (_filePath != null)
+                    Text(
+                      'Selected File: ${_filePath!.split(RegExp(r'[\\/]+')).last}',
+                    ),
                   const SizedBox(height: 16),
                   _isUploading
-                      ? const CircularProgressIndicator()
+                      ? Column(
+                        children: [
+                          CircularProgressIndicator(),
+
+                          const SizedBox(height: 8),
+                          Text(
+                            'Uploading: ${(_uploadProgress * 100).toStringAsFixed(0)}%',
+                            style: AppTextStyles.body2,
+                          ),
+                        ],
+                      )
                       : ElevatedButton(
                         onPressed: _uploadFile,
                         child: const Text('Upload and Transcribe'),

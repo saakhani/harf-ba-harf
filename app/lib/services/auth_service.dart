@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:flutter/material.dart';
+import 'package:harf_ba_harf/services/google_calendar_service.dart';
 
 class AuthService {
   final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
@@ -80,6 +81,8 @@ class AuthService {
   Future<void> signOut(BuildContext context) async {
     await _googleSignIn.signOut();
     await _firebaseAuth.signOut();
+    // Clear Google Calendar credentials
+    await GoogleCalendarService.clearGoogleCalendarCredentials();
     // Clear navigation stack and go to login
     if (context.mounted) {
       Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
