@@ -1,20 +1,7 @@
 !pip install pyngrok pyannote.audio pydub fastapi uvicorn python-multipart --quiet
 !pip install google-cloud-firestore --quiet
 
-service_account_key ={
-  "type": "service_account",
-  "project_id": "fyp-harfbaharf",
-  "private_key_id": "3333db1868dac77db7b1cacc19b462868407ff7c",
-  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQCrTvDKPCI5mMlC\nnVvr69qRAFZzARx0MX30nXCQppZCdGWkTkvMj+OakhTXBSgpbFLxnzJ7eOqtljBl\nhZkf0YmY9wDD/sHFQD/cxlbDFaoz4W9rjIhicLRJVnWoM2WASRcBTuCjmN9KUIr3\nFA7IyXQdyIHR00j1U0IteIUdnHDy21z+NYKp1ZdLngmKRpxvasc/9QKrmzAra19d\nGD90LPNo68oojxZVtVJ4LgOKfCCMB4ffhhUrSTZmjdsutfG579j5EAQHDdBLYoPU\nXSmHVkUJzxfpULg6MlmOZ2HZnbQVWDb67zkxLVU8kuTklpQoYKbXlBverXuz4Akr\nwRov0KS1AgMBAAECggEAHfz5MOXa9es1nCgwzblhbw24lHRG115MltQyvteyqRp4\nKo2cPkiYBth4tnVMJQg18t8z9qJhrpaCjVsYRZYoOLNQmn7Py+hl5Y+A47C4tVFK\n8HBO9bCWFtqASTwKEi15TfzRXUInIHq+AOeteN+vKIGPnDwY4v06sfwNjXPz38dW\nCpCE9sQgAQGOSfJoc+V+2tAb0HCXPcxAATcHH63iQhLC8qNolUm4PngLKYAcIbAz\n44IWxAxzV235rfcaO73CXAL0QXenNuh67GkFhYljYGrJFm/hLWzWS+S0dlRXpNNB\neIaRttjC3EIf/GZ4uD/BOr6v+BZrPrC06faH9MFRgQKBgQDrfAM0Xquo19HtBbQ3\nrHmSG7Qi5furNY8wrcnz3GSQxSZf9DziOQ7Yd23W33aOyPioxWLYp3ibyK7FiFnY\nN1lH8MLnngMYd26XaOtZRBwn0W250raizDxdSrhY1na9GO9U8kr3OShkiZS7ESIC\nkMTpZWsSSxc1vAjmRKaLAe6R9QKBgQC6O52AtMwgqAt0dUsaFINWfpfobcYsu39W\nVoRMoDqAbiCXIApp6xVpOsW9LIy+/Hnu9nrhbNZoerJ2/zsl9CrxWIONPnUKlDJc\ny+666BYoHSoeDXnhuH12GE4J2SwetnTyxjjxdgGIXlrzn8mmc3twzscBl9FrwT0Q\nvw/lGAJPwQKBgQDpY73hV7sW2uBq5G5bh4vuLZr5w6sNY0YJ3xT7pwHdIikIjQ8S\nv65hCO1KO6xLlBAvZYK0bDdzXxEpIhy52RGZ5Zum58r1otlvI0Ou83xcUotH0vnE\nnFtvszDGi7ifbmk2bfWy1WmdS2aniTGGDWm8URIvzVCxpy3C22Oc/ksvSQKBgQCW\n/aSqaGukAnsfFcYpQ/5kT0k8glwNgoswZf7n3XTxEdjMjobC732xjpwpz4fhhPQb\nYa2pPUPs+6XcQv0ivX9fpAMsrjnYtOTMRe+tjGQCa/rs2MI71wepivUimPhjgkz5\nVOtwIdwGQ3H8Wk307WZkxNGmof+CHO80t6Pce4XMQQKBgGRAD3CzZGETtE2ai63D\np3Wc9Bhd8ahim5o1U9itqFlyMZiUYKjKeU6VAW33KuySF9Uh87KoUWzqABTMnvas\nTUGX9ocbsrjvLpCBlEP7MjwVdheR/UynYjW6Ffn0WoFVo4+X9RZUOR3DDyXBEwlA\nV0ROmS5N2ieB1e2uMU15zzTc\n-----END PRIVATE KEY-----\n",
-  "client_email": "firebase-adminsdk-fbsvc@fyp-harfbaharf.iam.gserviceaccount.com",
-  "client_id": "108201991306169920765",
-  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-  "token_uri": "https://oauth2.googleapis.com/token",
-  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
-  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-fbsvc%40fyp-harfbaharf.iam.gserviceaccount.com",
-  "universe_domain": "googleapis.com"
-}
-
+service_account_key ={}
 
 
 import firebase_admin
@@ -46,8 +33,8 @@ print(device)
 print(torch_dtype)
 
 
-NGROK_AUTHTOKEN = "2wVJam0DHTNJ4tCdn6KruZSSVJh_4c7p2JxGgF1gmyhX2mMLP"
-hf_token = "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"
+NGROK_AUTHTOKEN = ""
+hf_token = "'
 cached_transcript = []
 
 # ------------------ Load Models ------------------
