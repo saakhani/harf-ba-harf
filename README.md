@@ -139,31 +139,9 @@ These results demonstrate strong performance on real-world, multi-speaker Urdu c
 
 ---
 
-## 🎓 Academic Context
-
-* **Degree:** BS Computer Science
-* **Institution:** Institute of Business Administration (IBA), Karachi
-* **Semester:** Spring 2025
-* **Advisors:**
-
-  * Dr. Zain Uddin (Lecturer)
-  * Mr. Adil Saleem (PhD Scholar)
-* **Industry Mentorship:** Softech Worldwide
-
----
-
-## 👥 Contributors
-
-* **Saad Lakhani** — Backend Development, App Development, Evaluation
-* Talal Khan — AI Models, Diarization Pipeline
-* Nimra Humayun — UI/UX Design
-* Maham Ahmed — UI/UX Design
-
----
-
 ## 📄 License
 
-This repository is intended for **academic and research purposes**. Licensing terms can be added as needed.
+This repository is intended for **academic and research purposes**.
 
 ---
 
