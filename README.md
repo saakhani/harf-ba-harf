@@ -4,7 +4,7 @@
 
 The project addresses the lack of reliable, integrated tools for conversational Urdu by combining automatic speech recognition (ASR), speaker diarization, and summarization into a single, end-to-end platform designed for real-world use cases such as meetings, lectures, and interviews.
 
-🎥 **Demo:** *(link to demo video)*
+🎥 **Demo:** *https://youtu.be/b-bstnTaYms*
 
 ---
 
